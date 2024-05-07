@@ -1,0 +1,66 @@
+{% extends "@ibexadesign/ui/layout.html.twig" %}
+
+{% trans_default_domain 'ezplatform_url_management' %}
+
+{% block breadcrumbs %}
+    {% include '@ibexadesign/ui/breadcrumbs.html.twig' with { items: [
+        { value: 'breadcrumb.admin'|trans(domain='messages')|desc('Admin') },
+        { value: 'import.export'|trans|desc('Import/Export'), url: path('netgen_import_export.route.admin.overview') },
+        { value: 'import'|trans|desc('Import') }
+    ]} %}
+{% endblock %}
+
+{% block header %}
+    {{ include('@NetgenContentBrowser/page_head.html.twig') }}
+    {% include '@ibexadesign/ui/page_title.html.twig' with {
+        title: 'import'|trans|desc('Import'),
+    } %}
+{% endblock %}
+
+{% block content %}
+    <div id="preview">
+    </div>
+    {{ form_start(form) }}
+    {{ form_row(form.package) }}
+    {{ form_row(form.parent_location) }}
+    <input id="previewButton" type="submit" class="btn btn-primary" value="{{'Import'|trans }}" />
+    {{ form_end(form) }}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var packageInput = document.querySelector('input[type="file"]');
+            var previewDiv = document.querySelector('#preview');
+            var previewButton = document.querySelector('#previewButton');
+
+            packageInput.addEventListener('change', function() {
+                // Prepare form data to send the file
+                var formData = new FormData();
+                formData.append('file', packageInput.files[0]);
+
+                // Make an AJAX request to the preview route
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '{{ path('netgen_import_export.route.admin.ajax.preview') }}', true); // Update to your route name
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        if (xhr.status === 200) {
+                            // Update the content of the preview div with the rendered Twig template
+                            previewDiv.innerHTML = xhr.responseText;
+
+                            // Enable the preview button if necessary
+                            previewButton.disabled = false;
+                            previewButton.style.opacity = 1;
+                        } else {
+                            // If the request fails, display a generic error message
+                            previewDiv.innerHTML = xhr.responseText;
+                            previewButton.disabled = true;
+                            previewButton.style.opacity = 0.5;
+                        }
+                    }
+                };
+                xhr.send(formData);
+            });
+        });
+    </script>
+
+{% endblock %}
