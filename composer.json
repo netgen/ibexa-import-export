@@ -1,0 +1,33 @@
+{
+    "name": "netgen/ibexa-import-export",
+    "description": "The Ibexa Import Export module enables import/export operations through the administration UI in Ibexa DXP",
+    "type": "ezplatform-bundle",
+    "homepage": "https://github.com/netgen/ibexa-import-export",
+    "license": "GPL-2.0-only",
+    "authors": [
+        {
+            "name": "Netgen",
+            "homepage": "https://netgen.io"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "ibexa/admin-ui": "*",
+        "ibexa/core": "^4.2",
+        "tanoconsulting/ibexa-migration-bundle": "^1.0",
+        "netgen/content-browser": "^1.4"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Netgen\\IbexaImportExport\\": "lib/",
+            "Netgen\\IbexaImportExportBundle\\": "bundle/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    }
+}
