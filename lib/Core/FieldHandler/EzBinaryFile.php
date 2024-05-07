@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Netgen\IbexaImportExport\FieldType;
+namespace Netgen\IbexaImportExport\Core\FieldHandler;
 
 use Ibexa\Contracts\Core\SiteAccess\ConfigResolverInterface;
 use Ibexa\Core\FieldType\BinaryFile\Value as BinaryFileValue;

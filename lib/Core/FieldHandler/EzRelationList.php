@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Kaliop\FieldHandler;
+namespace Netgen\IbexaImportExport\Core\FieldHandler;
 
 use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;

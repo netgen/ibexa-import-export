@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Kaliop\FieldHandler;
+namespace Netgen\IbexaImportExport\Core\FieldHandler;
 
 use DateTimeInterface;
 use Exception;
