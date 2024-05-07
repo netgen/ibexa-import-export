@@ -1,0 +1,2 @@
+parameters:
+  netgen.default.import_export.storage.path: 'public/var/site/storage'

@@ -1,0 +1,28 @@
+services:
+  Netgen\IbexaImportExportBundle\Controller\Index:
+    public: true
+    arguments:
+
+  Netgen\IbexaImportExportBundle\Controller\Export\Export:
+    public: true
+    arguments:
+      - "@ibexa.api.service.content"
+      - "@ibexa.api.service.location"
+
+  Netgen\IbexaImportExportBundle\Controller\Ajax\Preview:
+    public: true
+    arguments:
+      - "@ibexa.api.service.content_type"
+      - "@ibexa.api.service.location"
+      - "@ibexa.api.service.content"
+      - '@ez_migration_bundle.tag_matcher'
+      - '@ibexa.config.resolver'
+
+  Netgen\IbexaImportExportBundle\Controller\Export\Download:
+    public: true
+
+  Netgen\IbexaImportExportBundle\Controller\Import\Import:
+    public: true
+    arguments:
+      - "@ibexa.api.service.content"
+      - "@ibexa.api.service.location"

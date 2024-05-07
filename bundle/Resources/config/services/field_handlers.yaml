@@ -1,0 +1,46 @@
+services:
+  Netgen\IbexaImportExport\Core\FieldHandler\EzTags:
+    parent: ez_migration_bundle.complex_field
+    decorates: ez_migration_bundle.complex_field.eztags
+    arguments:
+      - '@ez_migration_bundle.tag_matcher'
+    tags:
+      - { name: ez_migration_bundle.complex_field, fieldtype: eztags, priority: 0 }
+
+  Netgen\IbexaImportExport\Core\FieldHandler\EzRelation:
+    parent: ez_migration_bundle.complex_field
+    arguments:
+      - '@ez_migration_bundle.content_matcher'
+      - "@ibexa.api.service.content"
+    tags:
+      - { name: ez_migration_bundle.complex_field, fieldtype: ezobjectrelation, priority: 0 }
+
+  Netgen\IbexaImportExport\Core\FieldHandler\EzRelationList:
+    parent: ez_migration_bundle.complex_field
+    arguments:
+      - '@ez_migration_bundle.content_matcher'
+      - "@ibexa.api.service.content"
+    tags:
+      - { name: ez_migration_bundle.complex_field, fieldtype: ezobjectrelationlist, priority: 0 }
+
+  Netgen\IbexaImportExport\Core\FieldHandler\EzBinaryFile:
+    parent: ez_migration_bundle.complex_field
+    arguments:
+      - '@ibexa.config.resolver'
+      - '%kernel.project_dir%'
+      - "$io.root_dir$"
+      - "@?ibexa.core.io.default_url_decorator"
+      - "@?ibexa.field_type.ezbinaryfile.io_service"
+    tags:
+      - { name: ez_migration_bundle.complex_field, fieldtype: ezbinaryfile, priority: 0 }
+
+  Netgen\IbexaImportExport\Core\FieldHandler\EzImage:
+    parent: ez_migration_bundle.complex_field
+    arguments:
+      - '@ibexa.config.resolver'
+      - '%kernel.project_dir%'
+      - "$io.root_dir$"
+      - "@?ibexa.core.io.default_url_decorator"
+      - '@ibexa.config.resolver'
+    tags:
+      - { name: ez_migration_bundle.complex_field, fieldtype: ezimage, priority: 0 }
