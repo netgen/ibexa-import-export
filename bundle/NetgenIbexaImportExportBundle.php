@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Netgen\Bundle\IbexaImportExportBundle;
+namespace Netgen\IbexaImportExportBundle;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
