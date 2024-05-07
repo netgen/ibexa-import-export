@@ -23,7 +23,7 @@ use function is_dir;
 use function mkdir;
 use function sprintf;
 
-class Import extends AbstractController
+final class Import extends AbstractController
 {
     private const MIGRATIONS_DIRECTORY = 'var/cache/migrations/';
 
