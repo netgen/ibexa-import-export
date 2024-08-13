@@ -12,10 +12,11 @@
     ],
     "require": {
         "php": "^8.1",
-        "ibexa/admin-ui": "*",
-        "ibexa/core": "^4.2",
+        "ibexa/admin-ui": "^4.6",
+        "ibexa/core": "^4.6",
+        "netgen/content-browser": "^1.4",
         "tanoconsulting/ibexa-migration-bundle": "^1.0",
-        "netgen/content-browser": "^1.4"
+        "netgen/tagsbundle": "^5.2"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

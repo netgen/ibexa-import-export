@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Netgen\IbexaImportExport\Core\FieldHandler;
 
 use Ibexa\Contracts\Core\SiteAccess\ConfigResolverInterface;
+use Ibexa\Core\FieldType\Image\Value;
 use Ibexa\Core\FieldType\Image\Value as ImageValue;
 use Ibexa\Core\IO\UrlDecorator;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
@@ -21,6 +22,7 @@ class EzImage extends FileFieldHandler implements FieldValueConverterInterface
     public function __construct(
         private readonly ConfigResolverInterface $configResolver,
         private readonly string $projectDirPath,
+        private readonly string $storagePath,
         $ioRootDir,
         ?UrlDecorator $ioDecorator = null,
         $ioService = null,
@@ -58,10 +60,7 @@ class EzImage extends FileFieldHandler implements FieldValueConverterInterface
             }
         }
 
-        $storagePath = $this->configResolver->hasParameter('import_export.storage.path', 'netgen') ?
-            $this->configResolver->getParameter('import_export.storage.path', 'netgen') :
-            'public/var/site/storage';
-        $realFilePath = $this->projectDirPath . '/' . $storagePath . '/' . $fileName;
+        $realFilePath = $this->projectDirPath . '/' . $this->storagePath . '/' . $fileName;
 
         if (!is_file($realFilePath) && !is_file($filePath)) {
             return new ImageValue();
@@ -84,7 +83,7 @@ class EzImage extends FileFieldHandler implements FieldValueConverterInterface
     }
 
     /**
-     * @param \Ibexa\Core\FieldType\Image\Value $fieldValue
+     * @param Value $fieldValue
      * @param array $context
      *
      * @return array

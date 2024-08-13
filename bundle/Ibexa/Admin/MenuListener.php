@@ -29,7 +29,7 @@ final class MenuListener implements EventSubscriberInterface
             'import_export',
             [
                 'label' => 'Import/Export',
-                'route' => 'netgen_import_export.route.admin.overview',
+                'route' => 'netgen_import_export.route.admin.index',
             ],
         );
     }

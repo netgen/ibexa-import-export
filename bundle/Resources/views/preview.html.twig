@@ -1,10 +1,10 @@
-<div id="import_details">
+<div id="import-details">
     <h2>Import details</h2>
     <h3>Structure: {{ import_structure }}</h3>
     <h3>Type: {{ import_mode }}</h3>
 </div>
 
-<div id="error_messages">
+<div id="import-error-messages">
     {% if errors is defined and errors is not empty %}
         {% for error in errors %}
             <h3>{{ error }}</h3>
@@ -12,7 +12,7 @@
     {% endif %}
 </div>
 
-<div id="skipped_content">
+<div id="import-skipped-content">
     {% if skipped_content is defined and skipped_content is not empty %}
         <h2>Skipped content</h2>
         {% for key, errors in skipped_content %}
@@ -26,7 +26,7 @@
     {% endif %}
 </div>
 
-<div id="skipped_content_fields">
+<div id="import-skipped-fields">
     {% if skipped_content_fields is defined and skipped_content_fields is not empty %}
         <h2>Skipped fields</h2>
         {% for identifier, errors in skipped_content_fields %}

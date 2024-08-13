@@ -83,6 +83,7 @@ class EzRelation extends AbstractFieldHandler implements FieldValueConverterInte
                 $destinationContent = $this->contentService->loadContent((int) $fieldValue->destinationContentId);
                 $destinationContentId = $destinationContent->contentInfo->remoteId;
             } catch (NotFoundException) {
+                // Do nothing
             }
         }
 

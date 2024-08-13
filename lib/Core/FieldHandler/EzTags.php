@@ -30,9 +30,9 @@ class EzTags extends AbstractFieldHandler implements FieldValueConverterInterfac
      * @param array $fieldValue
      * @param array $context
      *
-     * @throws Exception
-     *
      * @return Value
+     *
+     * @throws Exception
      */
     public function hashToFieldValue($fieldValue, array $context = []): Value
     {
@@ -57,7 +57,8 @@ class EzTags extends AbstractFieldHandler implements FieldValueConverterInterfac
                 ) {
                     $tags[$id] = $tag;
                 }
-            } catch (NotFoundException $e) {
+            } catch (NotFoundException) {
+                // Do nothing
             }
         }
 

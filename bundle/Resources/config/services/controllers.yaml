@@ -1,28 +1,41 @@
 services:
   Netgen\IbexaImportExportBundle\Controller\Index:
     public: true
-    arguments:
+    calls:
+        - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
 
   Netgen\IbexaImportExportBundle\Controller\Export\Export:
     public: true
+    calls:
+        - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
     arguments:
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
+      - '%netgen_ibexa_import_export.migrations_path%'
 
   Netgen\IbexaImportExportBundle\Controller\Ajax\Preview:
     public: true
+    calls:
+        - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
     arguments:
       - "@ibexa.api.service.content_type"
       - "@ibexa.api.service.location"
       - "@ibexa.api.service.content"
       - '@ez_migration_bundle.tag_matcher'
-      - '@ibexa.config.resolver'
+      - '%netgen_ibexa_import_export.storage_path%'
 
   Netgen\IbexaImportExportBundle\Controller\Export\Download:
     public: true
+    calls:
+        - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
+    arguments:
+        - '%netgen_ibexa_import_export.migrations_path%'
 
   Netgen\IbexaImportExportBundle\Controller\Import\Import:
     public: true
+    calls:
+        - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
     arguments:
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
+      - '%netgen_ibexa_import_export.migrations_path%'

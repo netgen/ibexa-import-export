@@ -1,0 +1,3 @@
+parameters:
+    netgen_ibexa_import_export.storage_path: 'public/var/site/storage'
+    netgen_ibexa_import_export.migrations_path: 'var/cache/migrations'

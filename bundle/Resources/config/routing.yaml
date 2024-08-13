@@ -1,7 +1,7 @@
-netgen_import_export.route.admin.overview:
+netgen_import_export.route.admin.index:
   path: /netgen/import-export/index
   defaults: { _controller: Netgen\IbexaImportExportBundle\Controller\Index }
-  methods: [GET, POST]
+  methods: [GET]
 
 netgen_import_export.route.admin.ajax.preview:
   path: /ajax/netgen/import-export/preview
@@ -16,7 +16,7 @@ netgen_import_export.route.admin.export:
 netgen_import_export.route.admin.download:
   path: /netgen/import-export/export/download/{file}
   defaults: { _controller: Netgen\IbexaImportExportBundle\Controller\Export\Download }
-  methods: [GET, POST]
+  methods: [GET]
 
 netgen_import_export.route.admin.import:
   path: /netgen/import-export/import

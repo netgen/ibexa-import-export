@@ -25,11 +25,10 @@ use function sprintf;
 
 final class Import extends AbstractController
 {
-    private const MIGRATIONS_DIRECTORY = 'var/cache/migrations/';
-
     public function __construct(
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
+        private readonly string $migrationsPath,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -39,11 +38,13 @@ final class Import extends AbstractController
         $phpPath = $phpFinder->find();
 
         if ($phpPath === false) {
-            throw new RuntimeException('The php executable could not be found. It is needed for executing parallel subprocesses, so add it to your PATH environment variable and try again.');
+            throw new RuntimeException(
+                'The php executable could not be found. It is needed for executing parallel subprocesses, so add it to your PATH environment variable and try again.',
+            );
         }
 
-        if (!is_dir('../' . self::MIGRATIONS_DIRECTORY)) {
-            mkdir('../' . self::MIGRATIONS_DIRECTORY, 0777, true);
+        if (!is_dir('../' . $this->migrationsPath)) {
+            mkdir('../' . $this->migrationsPath, 0777, true);
         }
 
         $form = $this->createForm(ImportType::class);
@@ -68,6 +69,7 @@ final class Import extends AbstractController
                         $this->locationService->loadLocationByRemoteId($locationRemoteId);
                         unset($yamlParsed[$key]);
                     } catch (NotFoundException) {
+                        // Do nothing
                     }
                 }
             } else {
@@ -83,13 +85,22 @@ final class Import extends AbstractController
                     }
                 }
             }
+
             $yaml = Yaml::dump($yamlParsed);
+
             $projectRoot = $this->getParameter('kernel.project_dir');
-            $randomTimeComponent = date('YmdHis'); // Current date and time in format: YearMonthDay_HourMinuteSecond
-            $newFilePath = $projectRoot . '/' . $this::MIGRATIONS_DIRECTORY . $randomTimeComponent . $uploadedFile->getClientOriginalName();
+            $randomTimeComponent = date('YmdHis');
+            $newFilePath = $projectRoot . '/' . $this->migrationsPath . '/' . $randomTimeComponent . $uploadedFile->getClientOriginalName();
+
             file_put_contents($newFilePath, $yaml);
 
-            $process = new Process(['../bin/console', 'kaliop:migration:migrate', '--path=' . $newFilePath]);
+            $process = new Process(
+                [
+                    '../bin/console',
+                    'kaliop:migration:migrate',
+                    '--path=' . $newFilePath,
+                ],
+            );
             $additionalAnswers = "Y\n";
             $process->setInput($additionalAnswers);
             $process->run();
@@ -112,7 +123,7 @@ final class Import extends AbstractController
         }
 
         return $this->render(
-            'import.html.twig',
+            '@NetgenIbexaImportExport/import.html.twig',
             [
                 'form' => $form->createView(),
             ],

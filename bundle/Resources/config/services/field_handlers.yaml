@@ -28,6 +28,7 @@ services:
     arguments:
       - '@ibexa.config.resolver'
       - '%kernel.project_dir%'
+      - '%netgen_ibexa_import_export.storage_path%'
       - "$io.root_dir$"
       - "@?ibexa.core.io.default_url_decorator"
       - "@?ibexa.field_type.ezbinaryfile.io_service"
@@ -39,6 +40,7 @@ services:
     arguments:
       - '@ibexa.config.resolver'
       - '%kernel.project_dir%'
+      - '%netgen_ibexa_import_export.storage_path%'
       - "$io.root_dir$"
       - "@?ibexa.core.io.default_url_decorator"
       - '@ibexa.config.resolver'

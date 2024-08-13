@@ -26,11 +26,10 @@ use function str_replace;
 
 final class Export extends AbstractController
 {
-    private const MIGRATIONS_DIRECTORY = 'var/cache/migrations/';
-
     public function __construct(
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
+        private readonly string $migrationsPath,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -40,11 +39,13 @@ final class Export extends AbstractController
         $phpPath = $phpFinder->find();
 
         if ($phpPath === false) {
-            throw new RuntimeException('The php executable could not be found. It is needed for executing parallel subprocesses, so add it to your PATH environment variable and try again.');
+            throw new RuntimeException(
+                'The PHP executable could not be found. It is needed for executing parallel subprocesses, so add it to your PATH environment variable and try again.',
+            );
         }
 
-        if (!is_dir('../' . self::MIGRATIONS_DIRECTORY)) {
-            mkdir('../' . self::MIGRATIONS_DIRECTORY, 0777, true);
+        if (!is_dir('../' . $this->migrationsPath)) {
+            mkdir('../' . $this->migrationsPath, 0777, true);
         }
 
         $form = $this->createForm(ExportType::class);
@@ -62,7 +63,7 @@ final class Export extends AbstractController
                 $this->addFlash('error', $e->getMessage());
 
                 return $this->render(
-                    'export.html.twig',
+                    '@NetgenIbexaImportExport/export.html.twig',
                     [
                         'form' => $form->createView(),
                         'fileName' => $fileName,
@@ -70,15 +71,39 @@ final class Export extends AbstractController
                 );
             }
 
-            // izvadi ovo u varijable i ocisti malo
             if ($sourceStructure === 'subtree') {
                 $subtreePath = $content->contentInfo->getMainLocation()->pathString;
-                $process = new Process([$phpPath, '../bin/console', 'kaliop:migration:generate', '--type=content', '--match-type=subtree', '--match-value=' . $subtreePath, '--mode=' . $migrationType, '../' . $this::MIGRATIONS_DIRECTORY, $migrationType . '_subtree']);
+                $process = new Process(
+                    [
+                        $phpPath,
+                        '../bin/console',
+                        'kaliop:migration:generate',
+                        '--type=content',
+                        '--match-type=subtree',
+                        '--match-value=' . $subtreePath,
+                        '--mode=' . $migrationType,
+                        '../' . $this->migrationsPath,
+                        $migrationType . '_subtree',
+                    ],
+                );
             } else {
-                $process = new Process([$phpPath, '../bin/console', 'kaliop:migration:generate', '--type=content', '--match-type=content_id', '--match-value=' . $contentId, '--mode=' . $migrationType, '../' . $this::MIGRATIONS_DIRECTORY, $migrationType . '_content']);
+                $process = new Process(
+                    [
+                        $phpPath,
+                        '../bin/console',
+                        'kaliop:migration:generate',
+                        '--type=content',
+                        '--match-type=content_id',
+                        '--match-value=' . $contentId,
+                        '--mode=' . $migrationType,
+                        '../' . $this->migrationsPath,
+                        $migrationType . '_content',
+                    ],
+                );
             }
 
             $process->run();
+
             if (!$process->isSuccessful()) {
                 $error = sprintf(
                     'The command "%s" failed. Exit Code: %s(%s) Working directory: %s',
@@ -87,16 +112,17 @@ final class Export extends AbstractController
                     $process->getExitCodeText(),
                     $process->getWorkingDirectory(),
                 );
+
                 $this->addFlash('error', $error);
             } else {
                 $message = $process->getOutput();
                 $this->addFlash('success', $message);
 
                 $fileName = str_replace("\n", '', basename($process->getOutput()));
-                $projectRoot = $this->getParameter('kernel.project_dir');
-                $filePath = $projectRoot . '/' . $this::MIGRATIONS_DIRECTORY . $fileName;
+                $projectRoot = $this->container->getParameter('kernel.project_dir');
+                $filePath = $projectRoot . '/' . $this->migrationsPath . '/' . $fileName;
                 $yamlParsed = Yaml::parseFile($filePath);
-                // put in service
+
                 /*
                  * @phpstan-ignore-next-line
                  */
@@ -114,7 +140,7 @@ final class Export extends AbstractController
         }
 
         return $this->render(
-            'export.html.twig',
+            '@NetgenIbexaImportExport/export.html.twig',
             [
                 'form' => $form->createView(),
                 'file' => $fileName ?? null,

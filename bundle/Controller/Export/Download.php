@@ -12,12 +12,14 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 final class Download extends AbstractController
 {
-    private const MIGRATIONS_DIRECTORY = 'var/cache/migrations/';
+    public function __construct(
+        private readonly string $migrationsPath,
+    ) {}
 
     public function __invoke(Request $request, string $file): Response
     {
-        $projectRoot = $this->getParameter('kernel.project_dir');
-        $filePath = $projectRoot . '/' . $this::MIGRATIONS_DIRECTORY . $file;
+        $projectRoot = $this->container->getParameter('kernel.project_dir');
+        $filePath = $projectRoot . '/' . $this->migrationsPath . '/' . $file;
         $response = new BinaryFileResponse($filePath);
         $response->headers->set('Content-Type', 'application/octet-stream');
         $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $file);
