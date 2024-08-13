@@ -53,13 +53,26 @@ final class Import extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var UploadedFile $uploadedFile */
             $uploadedFile = $form->get('package')->getData();
-            $parentLocationId = $form->get('parent_location')->getData();
 
             $yamlParsed = Yaml::parseFile($uploadedFile->getRealPath());
             $importMode = $yamlParsed[0]['mode'];
 
             if ($importMode === 'create') {
-                $yamlParsed[0]['parent_location'] = $this->locationService->loadLocation($parentLocationId)->remoteId;
+                $parentLocationId = $form->get('parent_location')->getData();
+
+                try {
+                    $parentLocation = $this->locationService->loadLocation((int) $parentLocationId);
+                } catch (NotFoundException $e) {
+                    $this->addFlash('error', 'You must enter parent location where you want to import your content');
+
+                    return $this->render(
+                        '@NetgenIbexaImportExport/import.html.twig',
+                        [
+                            'form' => $form->createView(),
+                        ],
+                    );
+                }
+                $yamlParsed[0]['parent_location'] = $parentLocation->remoteId;
                 foreach ($yamlParsed as $key => $content) {
                     $contentRemoteId = $content['remote_id'];
                     $locationRemoteId = $content['location_remote_id'];
@@ -74,12 +87,10 @@ final class Import extends AbstractController
                 }
             } else {
                 foreach ($yamlParsed as $key => $content) {
-                    $contentRemoteId = $content['remote_id'];
-                    $locationRemoteId = $content['location_remote_id'];
+                    $contentRemoteId = $content['match']['content_remote_id'];
 
                     try {
                         $this->contentService->loadContentByRemoteId($contentRemoteId);
-                        $this->locationService->loadLocationByRemoteId($locationRemoteId);
                     } catch (NotFoundException) {
                         unset($content[$key]);
                     }
@@ -88,7 +99,7 @@ final class Import extends AbstractController
 
             $yaml = Yaml::dump($yamlParsed);
 
-            $projectRoot = $this->getParameter('kernel.project_dir');
+            $projectRoot = $this->container->getParameter('kernel.project_dir');
             $randomTimeComponent = date('YmdHis');
             $newFilePath = $projectRoot . '/' . $this->migrationsPath . '/' . $randomTimeComponent . $uploadedFile->getClientOriginalName();
 
@@ -116,8 +127,7 @@ final class Import extends AbstractController
                 $this->addFlash('error', $error);
             }
 
-            $message = $process->getOutput();
-            $this->addFlash('success', $message);
+            $this->addFlash('success', 'Content successfully imported!');
 
             return $this->redirectToRoute('netgen_import_export.route.admin.import');
         }

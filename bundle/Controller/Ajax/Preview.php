@@ -61,18 +61,20 @@ final class Preview extends AbstractController
             $importMode = $yamlParsed[0]['mode'];
 
             foreach ($yamlParsed as &$content) {
-                try {
-                    $contentType = $this->contentTypeService->loadContentTypeByIdentifier($content['content_type']);
-                } catch (NotFoundException) {
-                    $skippedContent[$content['remote_id']][] = sprintf('Content type with identifier %s does not exist.', $content['content_type']);
+                if ($importMode === 'create') {
+                    try {
+                        $contentType = $this->contentTypeService->loadContentTypeByIdentifier($content['content_type']);
+                    } catch (NotFoundException) {
+                        $skippedContent[$content['remote_id']][] = sprintf('Content type with identifier %s does not exist.', $content['content_type']);
 
-                    continue;
-                }
+                        continue;
+                    }
 
-                if ($content['mode'] === 'create') {
                     try {
                         $this->contentService->loadContentByRemoteId($content['remote_id']);
                         $skippedContent[$content['remote_id']][] = sprintf('Content with remote id %s already exists.', $content['remote_id']);
+
+                        continue;
                     } catch (NotFoundException) {
                         // Do nothing
                     }
@@ -80,24 +82,33 @@ final class Preview extends AbstractController
                     try {
                         $this->locationService->loadLocationByRemoteId($content['location_remote_id']);
                         $skippedContent[$content['remote_id']][] = sprintf('Content with location remote id %s already exists.', $content['location_remote_id']);
+
+                        continue;
                     } catch (NotFoundException) {
                         // Do nothing
                     }
-                } elseif ($content['mode'] === 'update') {
+                } elseif ($importMode === 'update') {
                     try {
-                        $this->contentService->loadContentByRemoteId($content['remote_id']);
+                        $updateContent = $this->contentService->loadContentByRemoteId($content['match']['content_remote_id']);
                     } catch (NotFoundException) {
                         $skippedContent[$content['remote_id']][] = sprintf('Content with remote id %s does not exist.', $content['remote_id']);
+
+                        continue;
                     }
 
                     try {
-                        $this->locationService->loadLocationByRemoteId($content['location_remote_id']);
+                        $contentType = $updateContent->getContentType();
                     } catch (NotFoundException) {
-                        $skippedContent[$content['remote_id']][] = sprintf('Content with location remote id %s does not exist.', $content['location_remote_id']);
+                        $skippedContent[$content['remote_id']][] = sprintf('Content type with identifier %s does not exist.', $content['content_type']);
+
+                        continue;
                     }
                 }
 
-                if (!array_key_exists($content['remote_id'], $skippedContent)) {
+                if (
+                    $importMode === 'create' && !array_key_exists($content['remote_id'], $skippedContent)
+                    || $importMode === 'update' && !array_key_exists($content['match']['content_remote_id'], $skippedContent)
+                ) {
                     $attributes = $content['attributes'];
                     foreach ($attributes as $field => $value) {
                         $fieldTypeIdentifier = $contentType->getFieldDefinition($field)->fieldTypeIdentifier;
@@ -130,15 +141,23 @@ final class Preview extends AbstractController
                                 }
                             }
                         } elseif ($fieldTypeIdentifier === 'ezimage') {
+                            if ($value === null) {
+                                continue;
+                            }
+
                             $path = $value['path'];
 
-                            if (!is_file($this->getParameter('kernel.project_dir') . '/' . $this->storagePath . '/' . $path)) {
+                            if (!is_file($this->container->getParameter('kernel.project_dir') . '/' . $this->storagePath . '/' . $path)) {
                                 $skippedContentFields[$content['remote_id']][$field] = sprintf('Image with path %s does not exist.', $path);
                             }
                         } elseif ($fieldTypeIdentifier === 'ezbinaryfile') {
+                            if ($value === null) {
+                                continue;
+                            }
+
                             $path = $value['path'];
 
-                            if (!is_file($this->getParameter('kernel.project_dir') . '/' . $this->storagePath . '/' . $path)) {
+                            if (!is_file($this->container->getParameter('kernel.project_dir') . '/' . $this->storagePath . '/' . $path)) {
                                 $skippedContentFields[$content['remote_id']][$field] = sprintf('File with path %s does not exist.', $path);
                             }
                         }

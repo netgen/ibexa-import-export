@@ -6,7 +6,6 @@ namespace Netgen\IbexaImportExportBundle\Controller\Export;
 
 use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
-use Ibexa\Contracts\Core\Repository\Exceptions\UnauthorizedException;
 use Ibexa\Contracts\Core\Repository\LocationService;
 use Netgen\IbexaImportExportBundle\Form\ExportType;
 use RuntimeException;
@@ -53,20 +52,20 @@ final class Export extends AbstractController
         $fileName = null;
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $contentId = (int) $form->get('source')->getData();
+            $contentId = $form->get('source')->getData();
             $migrationType = $form->get('migration_type')->getData();
             $sourceStructure = $form->get('source_structure')->getData();
 
             try {
-                $content = $this->contentService->loadContent($contentId);
-            } catch (NotFoundException|UnauthorizedException $e) {
-                $this->addFlash('error', $e->getMessage());
+                $content = $this->contentService->loadContent((int) $contentId);
+            } catch (NotFoundException $e) {
+                $this->addFlash('error', 'You must enter the content you wish to export.');
 
                 return $this->render(
                     '@NetgenIbexaImportExport/export.html.twig',
                     [
                         'form' => $form->createView(),
-                        'fileName' => $fileName,
+                        'file' => $fileName,
                     ],
                 );
             }
@@ -115,8 +114,7 @@ final class Export extends AbstractController
 
                 $this->addFlash('error', $error);
             } else {
-                $message = $process->getOutput();
-                $this->addFlash('success', $message);
+                $this->addFlash('success', 'Content successfully exported!');
 
                 $fileName = str_replace("\n", '', basename($process->getOutput()));
                 $projectRoot = $this->container->getParameter('kernel.project_dir');
