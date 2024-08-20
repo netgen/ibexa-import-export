@@ -16,7 +16,8 @@
         "ibexa/core": "^4.6",
         "netgen/content-browser": "^1.4",
         "tanoconsulting/ibexa-migration-bundle": "^1.0",
-        "netgen/tagsbundle": "^5.2"
+        "netgen/tagsbundle": "^5.2",
+        "ext-dom": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

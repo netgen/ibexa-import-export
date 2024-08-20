@@ -1,7 +1,6 @@
 services:
   Netgen\IbexaImportExport\Core\FieldHandler\EzTags:
     parent: ez_migration_bundle.complex_field
-    decorates: ez_migration_bundle.complex_field.eztags
     arguments:
       - '@ez_migration_bundle.tag_matcher'
     tags:
@@ -46,3 +45,14 @@ services:
       - '@ibexa.config.resolver'
     tags:
       - { name: ez_migration_bundle.complex_field, fieldtype: ezimage, priority: 0 }
+
+  Netgen\IbexaImportExport\Core\FieldHandler\EzRichText:
+    parent: ez_migration_bundle.complex_field
+    arguments:
+      # if you want to replace custom references in rich text fields, you can replace this with a new service
+      # built f.e. using the ChainPrefixResolver class
+      - "@ibexa.api.service.content"
+      - "@ibexa.api.service.location"
+      - '@ez_migration_bundle.reference_resolver.customreference'
+    tags:
+      - { name: ez_migration_bundle.complex_field, fieldtype: ezrichtext, priority: 0 }
