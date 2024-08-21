@@ -1,5 +1,7 @@
 {% extends '@ibexadesign/ui/layout.html.twig' %}
 
+{% trans_default_domain 'import_export' %}
+
 {% block breadcrumbs %}
     {% include '@ibexadesign/ui/breadcrumbs.html.twig' with { items: [
         { value: 'breadcrumb.admin'|trans(domain='messages')|desc('Admin') },
@@ -14,6 +16,8 @@
 {% endblock %}
 
 {% block content %}
-    <p><a href="{{ path('netgen_import_export.route.admin.import') }}">Import</a></p>
-    <p><a href="{{ path('netgen_import_export.route.admin.export') }}">Export</a></p>
+    <section class="container ibexa-container">
+        <p><a class="btn btn-primary" href="{{ path('netgen_import_export.route.admin.import') }}">{{ 'netgen.ibexa_import_export.import'|trans|desc('Import') }}</a></p>
+        <p><a class="btn btn-primary" href="{{ path('netgen_import_export.route.admin.export') }}">{{ 'netgen.ibexa_import_export.export'|trans|desc('Export') }}</a></p>
+    </section>
 {% endblock %}

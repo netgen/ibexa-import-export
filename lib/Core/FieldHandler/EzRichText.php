@@ -23,14 +23,17 @@ use function mb_strlen;
 use function mb_substr;
 use function str_starts_with;
 
-class EzRichText extends AbstractFieldHandler implements FieldValueConverterInterface
+final class EzRichText extends AbstractFieldHandler implements FieldValueConverterInterface
 {
     public function __construct(
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
     ) {}
 
-    public function setReferenceResolver(ReferenceResolverInterface $referenceResolver)
+    /**
+     * @throws MigrationBundleException
+     */
+    public function setReferenceResolver(ReferenceResolverInterface $referenceResolver): void
     {
         if (!$referenceResolver instanceof EmbeddedReferenceResolverInterface) {
             throw new MigrationBundleException('Reference resolver injected into EzRichText field handler should implement EmbeddedReferenceResolverInterface');
@@ -38,28 +41,16 @@ class EzRichText extends AbstractFieldHandler implements FieldValueConverterInte
         parent::setReferenceResolver($referenceResolver);
     }
 
-    /**
-     * Replaces any references in an xml string to be used as the input data for an ezrichtext field.
-     *
-     * @param string|array $fieldValue The definition of teh field value, structured in the yml file. Either a string, or an array with key 'content'
-     * @param array $context The context for execution of the current migrations. Contains f.e. the path to the migration
-     *
-     * @return string
-     *
-     * @todo replace objects and location refs in ezcontent:// and ezlocation:// links
-     */
-    public function hashToFieldValue($fieldValue, array $context = [])
+    public function hashToFieldValue($fieldHash, array $context = [])
     {
-        if (is_string($fieldValue)) {
-            $xmlText = $fieldValue;
-        } elseif (is_array($fieldValue) && isset($fieldValue['xml'])) {
-            // native export format from eZ
-            $xmlText = $fieldValue['xml'];
+        if (is_string($fieldHash)) {
+            $xmlText = $fieldHash;
+        } elseif (is_array($fieldHash) && isset($fieldHash['xml'])) {
+            $xmlText = $fieldHash['xml'];
         } else {
-            $xmlText = $fieldValue['content'];
+            $xmlText = $fieldHash['content'];
         }
 
-        // Check if there are any references in the xml text and replace them. Please phpstorm.
         $resolver = $this->referenceResolver;
 
         /** @var EmbeddedReferenceResolverInterface $resolver */
@@ -131,7 +122,7 @@ class EzRichText extends AbstractFieldHandler implements FieldValueConverterInte
         return $doc->saveXML();
     }
 
-    public function fieldValueToHash($fieldValue, array $context = [])
+    public function fieldValueToHash($fieldValue, array $context = []): array
     {
         /** @var Value $fieldValue */
         $links = $fieldValue->xml->getElementsByTagName('link');

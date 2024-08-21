@@ -8,6 +8,8 @@ use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Contracts\Core\Repository\LocationService;
 use Netgen\IbexaImportExportBundle\Form\ImportType;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -16,6 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function date;
 use function file_put_contents;
@@ -25,10 +28,14 @@ use function sprintf;
 
 final class Import extends AbstractController
 {
+    private const TRANSLATION_DOMAIN = 'import_export';
+
     public function __construct(
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
         private readonly string $migrationsPath,
+        private readonly TranslatorInterface $translator,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {}
 
     public function __invoke(Request $request): Response
@@ -39,7 +46,7 @@ final class Import extends AbstractController
 
         if ($phpPath === false) {
             throw new RuntimeException(
-                'The php executable could not be found. It is needed for executing parallel subprocesses, so add it to your PATH environment variable and try again.',
+                $this->translator->trans('netgen.ibexa_import_export.error.php', domain: $this::TRANSLATION_DOMAIN),
             );
         }
 
@@ -62,8 +69,14 @@ final class Import extends AbstractController
 
                 try {
                     $parentLocation = $this->locationService->loadLocation((int) $parentLocationId);
-                } catch (NotFoundException $e) {
-                    $this->addFlash('error', 'You must enter parent location where you want to import your content');
+                } catch (NotFoundException) {
+                    $this->addFlash(
+                        'error',
+                        $this->translator->trans(
+                            'netgen.ibexa_import_export.error.import.parent_location',
+                            domain: $this::TRANSLATION_DOMAIN,
+                        ),
+                    );
 
                     return $this->render(
                         '@NetgenIbexaImportExport/import.html.twig',
@@ -124,10 +137,25 @@ final class Import extends AbstractController
                     $process->getExitCodeText(),
                     $process->getWorkingDirectory(),
                 );
-                $this->addFlash('error', $error);
+
+                $this->logger->error($error);
+
+                $this->addFlash(
+                    'error',
+                    $this->translator->trans(
+                        'netgen.ibexa_import_export.error.import',
+                        domain: $this::TRANSLATION_DOMAIN,
+                    ),
+                );
             }
 
-            $this->addFlash('success', 'Content successfully imported!');
+            $this->addFlash(
+                'success',
+                $this->translator->trans(
+                    'netgen.ibexa_import_export.success.import',
+                    domain: $this::TRANSLATION_DOMAIN,
+                ),
+            );
 
             return $this->redirectToRoute('netgen_import_export.route.admin.import');
         }

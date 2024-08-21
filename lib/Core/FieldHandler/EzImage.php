@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Netgen\IbexaImportExport\Core\FieldHandler;
 
-use Ibexa\Contracts\Core\SiteAccess\ConfigResolverInterface;
-use Ibexa\Core\FieldType\Image\Value;
 use Ibexa\Core\FieldType\Image\Value as ImageValue;
 use Ibexa\Core\IO\UrlDecorator;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
@@ -17,10 +15,9 @@ use function is_file;
 use function is_string;
 use function realpath;
 
-class EzImage extends FileFieldHandler implements FieldValueConverterInterface
+final class EzImage extends FileFieldHandler implements FieldValueConverterInterface
 {
     public function __construct(
-        private readonly ConfigResolverInterface $configResolver,
         private readonly string $projectDirPath,
         private readonly string $storagePath,
         $ioRootDir,
@@ -30,44 +27,32 @@ class EzImage extends FileFieldHandler implements FieldValueConverterInterface
         parent::__construct($ioRootDir, $ioDecorator, $ioService);
     }
 
-    /**
-     * Creates a value object to use as the field value when setting an image field type.
-     *
-     * @param array|string $fieldValue The path to the file or an array with 'path' and 'alt_text' keys
-     * @param array $context The context for execution of the current migrations. Contains f.e. the path to the migration
-     *
-     * @return ImageValue
-     *
-     * @todo resolve refs more
-     */
-    public function hashToFieldValue($fieldValue, array $context = []): ImageValue
+    public function hashToFieldValue($fieldHash, array $context = []): ImageValue
     {
         $altText = '';
         $fileName = '';
 
-        if ($fieldValue === null) {
+        if ($fieldHash === null) {
             return new ImageValue();
         }
-        if (is_string($fieldValue)) {
-            $filePath = $fieldValue;
+        if (is_string($fieldHash)) {
+            $filePath = $fieldHash;
         } else {
-            $filePath = $this->referenceResolver->resolveReference($fieldValue['path']);
-            if (isset($fieldValue['alt_text'])) {
-                $altText = $this->referenceResolver->resolveReference($fieldValue['alt_text']);
+            $filePath = $this->referenceResolver->resolveReference($fieldHash['path']);
+            if (isset($fieldHash['alt_text'])) {
+                $altText = $this->referenceResolver->resolveReference($fieldHash['alt_text']);
             }
-            if (isset($fieldValue['filename'])) {
-                $fileName = $this->referenceResolver->resolveReference($fieldValue['filename']);
+            if (isset($fieldHash['filename'])) {
+                $fileName = $this->referenceResolver->resolveReference($fieldHash['filename']);
             }
         }
 
-        $realFilePath = $this->projectDirPath . '/' . $this->storagePath . '/' . $fileName;
+        $realFilePath = $this->projectDirPath . '/' . $this->storagePath . '/' . $filePath;
 
         if (!is_file($realFilePath) && !is_file($filePath)) {
             return new ImageValue();
         }
 
-        // but in the past, when using a string, this worked as well as an absolute path, so we have to support it as well
-        // / @todo atm this does not work for files from content fields in cluster mode
         if (!is_file($realFilePath) && is_file($filePath)) {
             $realFilePath = $filePath;
         }
@@ -82,21 +67,12 @@ class EzImage extends FileFieldHandler implements FieldValueConverterInterface
         );
     }
 
-    /**
-     * @param Value $fieldValue
-     * @param array $context
-     *
-     * @return array
-     *
-     * @todo check out if this works in ezplatform
-     */
     public function fieldValueToHash($fieldValue, array $context = []): ?array
     {
         if ($fieldValue->uri === null) {
             return null;
         }
 
-        // / @todo we should handle clustered configurations, to give back the absolute path on disk rather than the 'virtual' one
         return [
             'path' => realpath($this->ioRootDir) . '/' . ($this->ioDecorator ? $this->ioDecorator->undecorate($fieldValue->uri) : $fieldValue->uri),
             'filename' => $fieldValue->fileName,

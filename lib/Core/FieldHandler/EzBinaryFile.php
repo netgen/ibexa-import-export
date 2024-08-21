@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Netgen\IbexaImportExport\Core\FieldHandler;
 
-use Ibexa\Contracts\Core\SiteAccess\ConfigResolverInterface;
-use Ibexa\Core\FieldType\BinaryFile\Value;
 use Ibexa\Core\FieldType\BinaryFile\Value as BinaryFileValue;
 use Ibexa\Core\IO\UrlDecorator;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
@@ -17,10 +15,9 @@ use function is_file;
 use function is_string;
 use function realpath;
 
-class EzBinaryFile extends FileFieldHandler implements FieldValueConverterInterface
+final class EzBinaryFile extends FileFieldHandler implements FieldValueConverterInterface
 {
     public function __construct(
-        private readonly ConfigResolverInterface $configResolver,
         private readonly string $projectDirPath,
         private readonly string $storagePath,
         $ioRootDir,
@@ -30,41 +27,31 @@ class EzBinaryFile extends FileFieldHandler implements FieldValueConverterInterf
         parent::__construct($ioRootDir, $ioDecorator, $ioService);
     }
 
-    /**
-     * @param array|string $fieldValue The path to the file or an array with 'path' key
-     * @param array $context The context for execution of the current migrations. Contains f.e. the path to the migration
-     *
-     * @return BinaryFileValue
-     *
-     * @todo resolve refs more
-     */
-    public function hashToFieldValue($fieldValue, array $context = []): BinaryFileValue
+    public function hashToFieldValue($fieldHash, array $context = []): BinaryFileValue
     {
         $mimeType = '';
         $fileName = '';
 
-        if ($fieldValue === null) {
+        if ($fieldHash === null) {
             return new BinaryFileValue();
-        } if (is_string($fieldValue)) {
-            $filePath = $fieldValue;
+        } if (is_string($fieldHash)) {
+            $filePath = $fieldHash;
         } else {
-            $filePath = $this->referenceResolver->resolveReference($fieldValue['path']);
-            if (isset($fieldValue['filename'])) {
-                $fileName = $this->referenceResolver->resolveReference($fieldValue['filename']);
+            $filePath = $this->referenceResolver->resolveReference($fieldHash['path']);
+            if (isset($fieldHash['filename'])) {
+                $fileName = $this->referenceResolver->resolveReference($fieldHash['filename']);
             }
-            if (isset($fieldValue['mime_type'])) {
-                $mimeType = $this->referenceResolver->resolveReference($fieldValue['mime_type']);
+            if (isset($fieldHash['mime_type'])) {
+                $mimeType = $this->referenceResolver->resolveReference($fieldHash['mime_type']);
             }
         }
 
-        $realFilePath = $this->projectDirPath . '/' . $this->storagePath . '/' . $fileName;
+        $realFilePath = $this->projectDirPath . '/' . $this->storagePath . '/' . $filePath;
 
         if (!is_file($realFilePath) && !is_file($filePath)) {
             return new BinaryFileValue();
         }
 
-        // but in the past, when using a string, this worked as well as an absolute path, so we have to support it as well
-        // / @todo atm this does not work for files from content fields in cluster mode
         if (!is_file($realFilePath) && is_file($filePath)) {
             $realFilePath = $filePath;
         }
@@ -73,11 +60,8 @@ class EzBinaryFile extends FileFieldHandler implements FieldValueConverterInterf
             'path' => $realFilePath,
             'fileSize' => filesize($realFilePath),
             'fileName' => $fileName !== '' ? $fileName : basename($realFilePath),
-            // 'mimeType' => $mimeType != '' ? $mimeType : mime_content_type($realFilePath)
         ];
 
-        // changed 2021/1/6: we do _not_ add the mimetype by default any more, as it is either buggy or
-        // useless - see https://github.com/kaliop-uk/ezmigrationbundle/issues/147#issuecomment-755755241
         if ($mimeType !== '') {
             $fieldValues['mimeType'] = $mimeType;
         }
@@ -85,14 +69,6 @@ class EzBinaryFile extends FileFieldHandler implements FieldValueConverterInterf
         return new BinaryFileValue($fieldValues);
     }
 
-    /**
-     * @param Value $fieldValue
-     * @param array $context
-     *
-     * @return array
-     *
-     * @todo check if this works in ezplatform
-     */
     public function fieldValueToHash($fieldValue, array $context = []): ?array
     {
         if ($fieldValue->uri === null) {
@@ -100,7 +76,6 @@ class EzBinaryFile extends FileFieldHandler implements FieldValueConverterInterf
         }
         $binaryFile = $this->ioService->loadBinaryFile($fieldValue->id);
 
-        // / @todo we should handle clustered configurations, to give back the absolute path on disk rather than the 'virtual' one
         return [
             'path' => realpath($this->ioRootDir) . '/' . ($this->ioDecorator ? $this->ioDecorator->undecorate($binaryFile->uri) : $binaryFile->uri),
             'filename' => $fieldValue->fileName,

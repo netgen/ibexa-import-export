@@ -10,46 +10,32 @@ use Ibexa\Core\FieldType\Relation\Value;
 use Kaliop\eZMigrationBundle\API\FieldDefinitionConverterInterface;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
-use Kaliop\eZMigrationBundle\Core\Matcher\ContentMatcher;
 
 use function array_key_exists;
 use function is_array;
 
-class EzRelation extends AbstractFieldHandler implements FieldValueConverterInterface, FieldDefinitionConverterInterface
+final class EzRelation extends AbstractFieldHandler implements FieldValueConverterInterface, FieldDefinitionConverterInterface
 {
     public function __construct(
-        private readonly ContentMatcher $contentMatcher,
         private readonly ContentService $contentService,
     ) {}
 
-    /**
-     * Creates a value object to use as the field value when setting an ez relation field type.
-     *
-     * @param array|string|int $fieldValue The definition of the field value, structured in the yml file
-     * @param array $context The context for execution of the current migrations. Contains f.e. the path to the migration
-     *
-     * @return Value
-     */
-    public function hashToFieldValue($fieldValue, array $context = []): Value
+    public function hashToFieldValue($fieldHash, array $context = []): Value
     {
-        if (is_array($fieldValue) && array_key_exists('destinationContentId', $fieldValue)) {
+        if (is_array($fieldHash) && array_key_exists('destinationContentId', $fieldHash)) {
             // fromHash format
-            $id = $fieldValue['destinationContentId'];
+            $id = $fieldHash['destinationContentId'];
         } else {
             // simplified format
-            $id = $fieldValue;
+            $id = $fieldHash;
         }
 
         if ($id === null) {
             return new Value();
         }
 
-        // 1. resolve relations
-        // NB: this might result in double reference-resolving when the original value is a string, given preResolveReferences...
         $id = $this->referenceResolver->resolveReference($id);
-        // 2. resolve remote ids
 
-        // check if content with remote id exists
         try {
             $relatedContent = $this->contentService->loadContentByRemoteId($id);
 
@@ -61,7 +47,6 @@ class EzRelation extends AbstractFieldHandler implements FieldValueConverterInte
 
     public function fieldSettingsToHash($settingsValue, array $context = [])
     {
-        // work around https://jira.ez.no/browse/EZP-26916
         if (is_array($settingsValue) && isset($settingsValue['selectionRoot']) && $settingsValue['selectionRoot'] === '') {
             $settingsValue['selectionRoot'] = null;
         }

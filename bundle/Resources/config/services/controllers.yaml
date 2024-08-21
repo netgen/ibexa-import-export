@@ -12,6 +12,8 @@ services:
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
       - '%netgen_ibexa_import_export.migrations_path%'
+      - "@translator"
+      - '@?logger'
 
   Netgen\IbexaImportExportBundle\Controller\Ajax\Preview:
     public: true
@@ -23,6 +25,7 @@ services:
       - "@ibexa.api.service.content"
       - '@ez_migration_bundle.tag_matcher'
       - '%netgen_ibexa_import_export.storage_path%'
+      - "@translator"
 
   Netgen\IbexaImportExportBundle\Controller\Export\Download:
     public: true
@@ -39,3 +42,5 @@ services:
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
       - '%netgen_ibexa_import_export.migrations_path%'
+      - "@translator"
+      - '@?logger'

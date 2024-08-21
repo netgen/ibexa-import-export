@@ -9,7 +9,6 @@ services:
   Netgen\IbexaImportExport\Core\FieldHandler\EzRelation:
     parent: ez_migration_bundle.complex_field
     arguments:
-      - '@ez_migration_bundle.content_matcher'
       - "@ibexa.api.service.content"
     tags:
       - { name: ez_migration_bundle.complex_field, fieldtype: ezobjectrelation, priority: 0 }
@@ -17,7 +16,6 @@ services:
   Netgen\IbexaImportExport\Core\FieldHandler\EzRelationList:
     parent: ez_migration_bundle.complex_field
     arguments:
-      - '@ez_migration_bundle.content_matcher'
       - "@ibexa.api.service.content"
     tags:
       - { name: ez_migration_bundle.complex_field, fieldtype: ezobjectrelationlist, priority: 0 }
@@ -25,7 +23,6 @@ services:
   Netgen\IbexaImportExport\Core\FieldHandler\EzBinaryFile:
     parent: ez_migration_bundle.complex_field
     arguments:
-      - '@ibexa.config.resolver'
       - '%kernel.project_dir%'
       - '%netgen_ibexa_import_export.storage_path%'
       - "$io.root_dir$"
@@ -37,7 +34,6 @@ services:
   Netgen\IbexaImportExport\Core\FieldHandler\EzImage:
     parent: ez_migration_bundle.complex_field
     arguments:
-      - '@ibexa.config.resolver'
       - '%kernel.project_dir%'
       - '%netgen_ibexa_import_export.storage_path%'
       - "$io.root_dir$"
@@ -49,10 +45,15 @@ services:
   Netgen\IbexaImportExport\Core\FieldHandler\EzRichText:
     parent: ez_migration_bundle.complex_field
     arguments:
-      # if you want to replace custom references in rich text fields, you can replace this with a new service
-      # built f.e. using the ChainPrefixResolver class
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
       - '@ez_migration_bundle.reference_resolver.customreference'
     tags:
       - { name: ez_migration_bundle.complex_field, fieldtype: ezrichtext, priority: 0 }
+
+  Netgen\IbexaImportExport\Core\FieldHandler\NgEnhancedLink:
+    parent: ez_migration_bundle.complex_field
+    arguments:
+      - "@ibexa.api.service.content"
+    tags:
+      - { name: ez_migration_bundle.complex_field, fieldtype: ngenhancedlink, priority: 0 }

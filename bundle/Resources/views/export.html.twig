@@ -1,5 +1,7 @@
 {% extends "@ibexadesign/ui/layout.html.twig" %}
 
+{% trans_default_domain 'import_export' %}
+
 {% block breadcrumbs %}
     {% include '@ibexadesign/ui/breadcrumbs.html.twig' with { items: [
         { value: 'breadcrumb.admin'|trans(domain='messages')|desc('Admin') },
@@ -16,14 +18,18 @@
 {% endblock %}
 
 {% block content %}
-    {% if file is not null %}
-        <a href="{{ path('netgen_import_export.route.admin.download', {'file': file}) }}" class="btn btn-primary" id="download-link" onclick="window.onbeforeunload=null">{{ 'netgen.ibexa_import_export.download_file'|trans|desc('Download file') }}</a>
-    {% endif %}
+    <section class="container ibexa-container">
+        {% if file is not null %}
+            <a href="{{ path('netgen_import_export.route.admin.download', {'file': file}) }}" class="btn btn-primary" id="download-link" onclick="window.onbeforeunload=null">{{ 'netgen.ibexa_import_export.export.download_file'|trans|desc('Download file') }}</a>
+        {% endif %}
 
-    {{ form_start(form) }}
-    {{ form_row(form.migration_type) }}
-    {{ form_row(form.source_structure) }}
-    {{ form_row(form.source) }}
-    <input type="submit" class="btn btn-primary" value="{{ 'netgen.ibexa_import_export.export'|trans|desc('Export') }}" />
-    {{ form_end(form) }}
+        <div class="ibexa-import-export__form">
+            {{ form_start(form) }}
+            {{ form_row(form.migration_type) }}
+            {{ form_row(form.source_structure) }}
+            {{ form_row(form.source) }}
+            <input type="submit" class="btn btn-primary" value="{{ 'netgen.ibexa_import_export.export'|trans|desc('Export') }}" />
+            {{ form_end(form) }}
+        </div>
+    </section>
 {% endblock %}

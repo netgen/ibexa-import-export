@@ -8,6 +8,8 @@ use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Contracts\Core\Repository\LocationService;
 use Netgen\IbexaImportExportBundle\Form\ExportType;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,6 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function basename;
 use function file_put_contents;
@@ -25,10 +28,14 @@ use function str_replace;
 
 final class Export extends AbstractController
 {
+    private const TRANSLATION_DOMAIN = 'import_export';
+
     public function __construct(
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
         private readonly string $migrationsPath,
+        private readonly TranslatorInterface $translator,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {}
 
     public function __invoke(Request $request): Response
@@ -39,7 +46,11 @@ final class Export extends AbstractController
 
         if ($phpPath === false) {
             throw new RuntimeException(
-                'The PHP executable could not be found. It is needed for executing parallel subprocesses, so add it to your PATH environment variable and try again.',
+                $this->translator->trans(
+                    'netgen.ibexa_import_export.error.php',
+                    [],
+                    $this::TRANSLATION_DOMAIN,
+                ),
             );
         }
 
@@ -58,8 +69,15 @@ final class Export extends AbstractController
 
             try {
                 $content = $this->contentService->loadContent((int) $contentId);
-            } catch (NotFoundException $e) {
-                $this->addFlash('error', 'You must enter the content you wish to export.');
+            } catch (NotFoundException) {
+                $this->addFlash(
+                    'error',
+                    $this->translator->trans(
+                        'netgen.ibexa_import_export.error.export.content',
+                        [],
+                        $this::TRANSLATION_DOMAIN,
+                    ),
+                );
 
                 return $this->render(
                     '@NetgenIbexaImportExport/export.html.twig',
@@ -112,10 +130,13 @@ final class Export extends AbstractController
                     $process->getWorkingDirectory(),
                 );
 
-                $this->addFlash('error', $error);
-            } else {
-                $this->addFlash('success', 'Content successfully exported!');
+                $this->logger->error($error);
 
+                $this->addFlash(
+                    'error',
+                    $error,
+                );
+            } else {
                 $fileName = str_replace("\n", '', basename($process->getOutput()));
                 $projectRoot = $this->container->getParameter('kernel.project_dir');
                 $filePath = $projectRoot . '/' . $this->migrationsPath . '/' . $fileName;
@@ -134,6 +155,15 @@ final class Export extends AbstractController
 
                 $yaml = Yaml::dump($yamlParsed);
                 file_put_contents($filePath, $yaml);
+
+                $this->addFlash(
+                    'success',
+                    $this->translator->trans(
+                        'netgen.ibexa_import_export.success.export',
+                        [],
+                        $this::TRANSLATION_DOMAIN,
+                    ),
+                );
             }
         }
 

@@ -1,50 +1,54 @@
-<div id="import-details">
-    <h2>Import details</h2>
-    <h3>Structure: {{ import_structure }}</h3>
-    <h3>Type: {{ import_mode }}</h3>
-</div>
+{% trans_default_domain 'import_export' %}
 
-<div id="import-error-messages">
-    {% if errors is defined and errors is not empty %}
-        {% for error in errors %}
-            <h3>{{ error }}</h3>
-        {% endfor %}
-    {% endif %}
-</div>
+<section class="container ibexa-container">
+    <div id="ibexa-import-export__import-preview-details">
+        <h2>{{ 'netgen.ibexa_import_export.preview.import_details'|trans|desc('Import details') }}</h2>
+        <h3>{{ 'netgen.ibexa_import_export.preview.structure'|trans|desc('Structure') }}: {{ import_structure }}</h3>
+        <h3>{{ 'netgen.ibexa_import_export.preview.type'|trans|desc('Type') }}: {{ import_mode }}</h3>
+    </div>
 
-<div id="import-skipped-content">
-    {% if skipped_content is defined and skipped_content is not empty %}
-        <h2>Skipped content</h2>
-        {% for key, errors in skipped_content %}
-            <h4>Content remote id: {{ key }}</h4>
-            <ul>
-                {% for error in errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-        {% endfor %}
-    {% endif %}
-</div>
+    <div id="ibexa-import-export__import-preview-error-messages">
+        {% if errors is defined and errors is not empty %}
+            {% for error in errors %}
+                <h3>{{ error }}</h3>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-<div id="import-skipped-fields">
-    {% if skipped_content_fields is defined and skipped_content_fields is not empty %}
-        <h2>Skipped fields</h2>
-        {% for identifier, errors in skipped_content_fields %}
-            <h3>Content remote id: {{ identifier }}</h3>
-            <ul>
-                {% for errorType, errorData in errors %}
-                    <li><strong>{{ errorType }}</strong></li>
-                    {% if errorData is iterable %}
-                        <ul>
-                            {% for errorMessage in errorData %}
-                                <li>{{ errorMessage }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <li>{{ errorData }}</li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
-        {% endfor %}
-    {% endif %}
-</div>
+    <div id="ibexa-import-export__import-preview-skipped-content">
+        {% if skipped_content is defined and skipped_content is not empty %}
+            <h2>{{ 'netgen.ibexa_import_export.preview.skipped_content'|trans|desc('Skipped content') }}</h2>
+            {% for id, errors in skipped_content %}
+                <h4>{{ 'netgen.ibexa_import_export.preview.remote_id'|trans|desc('Remote ID') }}: {{ id }}</h4>
+                <ul>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div id="ibexa-import-export__import-preview-skipped-fields">
+        {% if skipped_content_fields is defined and skipped_content_fields is not empty %}
+            <h2>{{ 'netgen.ibexa_import_export.preview.skipped_fields'|trans|desc('Skipped fields') }}</h2>
+            {% for id, errors in skipped_content_fields %}
+                <h3>{{ 'netgen.ibexa_import_export.preview.remote_id'|trans|desc('Remote ID') }}: {{ id }}</h3>
+                <ul>
+                    {% for error_type, error_data in errors %}
+                        <li><strong>{{ error_type }}</strong></li>
+                        {% if error_data is iterable %}
+                            <ul>
+                                {% for error_message in error_data %}
+                                    <li>{{ error_message }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <li>{{ error_data }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        {% endif %}
+    </div>
+</section>

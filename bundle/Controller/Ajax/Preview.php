@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function array_key_exists;
 use function count;
@@ -33,6 +34,7 @@ final class Preview extends AbstractController
         private readonly ContentService $contentService,
         private readonly TagMatcher $tagMatcher,
         private readonly string $storagePath,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -159,6 +161,14 @@ final class Preview extends AbstractController
 
                             if (!is_file($this->container->getParameter('kernel.project_dir') . '/' . $this->storagePath . '/' . $path)) {
                                 $skippedContentFields[$content['remote_id']][$field] = sprintf('File with path %s does not exist.', $path);
+                            }
+                        } elseif ($fieldTypeIdentifier === 'ngenhancedlink') {
+                            if ($value['is_internal']) {
+                                try {
+                                    $content = $this->contentService->loadContentByRemoteId($value['reference']);
+                                } catch (NotFoundException) {
+                                    $skippedContentFields[$content['remote_id']][$field] = sprintf('Internal content with remote id %s does not exist.', $value['reference']);
+                                }
                             }
                         }
                     }

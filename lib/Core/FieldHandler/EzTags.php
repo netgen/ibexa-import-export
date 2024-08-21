@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Netgen\IbexaImportExport\Core\FieldHandler;
 
 use DateTimeInterface;
-use Exception;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
+use Kaliop\eZMigrationBundle\API\Exception\InvalidMatchConditionsException;
 use Kaliop\eZMigrationBundle\API\Exception\InvalidStepDefinitionException;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
@@ -18,34 +18,26 @@ use function is_array;
 use function key;
 use function reset;
 
-class EzTags extends AbstractFieldHandler implements FieldValueConverterInterface
+final class EzTags extends AbstractFieldHandler implements FieldValueConverterInterface
 {
     public function __construct(
         private readonly TagMatcher $tagMatcher,
     ) {}
 
     /**
-     * Override the hashToFieldValue method to modify its behavior.
+     * @param mixed $fieldHash
      *
-     * @param array $fieldValue
-     * @param array $context
-     *
-     * @return Value
-     *
-     * @throws Exception
+     * @throws InvalidMatchConditionsException
+     * @throws InvalidStepDefinitionException
      */
-    public function hashToFieldValue($fieldValue, array $context = []): Value
+    public function hashToFieldValue($fieldHash, array $context = []): Value
     {
         $tags = [];
-        foreach ($fieldValue as $def) {
+        foreach ($fieldHash as $def) {
             if (!is_array($def)) {
                 throw new InvalidStepDefinitionException('Definition of EzTags field is incorrect: each element of the tags array must be an array with one element');
             }
 
-            /**
-             * @todo support single-value elements too? if numeric, it is a tag id, if it is a string it is... what?
-             *       it could be either a tag's remote id or a keyword...
-             */
             $identifier = reset($def);
             $type = key($def);
 
@@ -65,7 +57,7 @@ class EzTags extends AbstractFieldHandler implements FieldValueConverterInterfac
         return new Value(array_values($tags));
     }
 
-    public function fieldValueToHash($fieldValue, array $context = [])
+    public function fieldValueToHash($fieldValue, array $context = []): array
     {
         /** @var Value $fieldValue */
         $hash = [];
