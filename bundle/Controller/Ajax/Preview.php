@@ -9,6 +9,8 @@ use Ibexa\Contracts\Core\Repository\ContentTypeService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Contracts\Core\Repository\LocationService;
 use Kaliop\eZMigrationBundle\Core\Matcher\TagMatcher;
+use Netgen\IbexaImportExportBundle\Registry\Registry;
+use OutOfBoundsException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,8 +21,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 use function array_key_exists;
 use function count;
 use function in_array;
-use function is_file;
+use function is_array;
+use function is_string;
 use function mb_strtolower;
+use function method_exists;
 use function pathinfo;
 use function sprintf;
 
@@ -35,6 +39,7 @@ final class Preview extends AbstractController
         private readonly TagMatcher $tagMatcher,
         private readonly string $storagePath,
         private readonly TranslatorInterface $translator,
+        private readonly Registry $registry,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -114,61 +119,23 @@ final class Preview extends AbstractController
                     $attributes = $content['attributes'];
                     foreach ($attributes as $field => $value) {
                         $fieldTypeIdentifier = $contentType->getFieldDefinition($field)->fieldTypeIdentifier;
-                        if ($fieldTypeIdentifier === 'ezobjectrelation') {
-                            $destinationContentId = $value['destinationContentId'];
-                            if ($destinationContentId !== null) {
-                                try {
-                                    $this->contentService->loadContentByRemoteId($destinationContentId);
-                                } catch (NotFoundException) {
-                                    $skippedContentFields[$content['remote_id']][$field][] = sprintf('Destination content with remote id %s does not exist.', $destinationContentId);
-                                }
-                            }
-                        } elseif ($fieldTypeIdentifier === 'ezobjectrelationlist') {
-                            $destinationContentIds = $value['destinationContentIds'];
-                            foreach ($destinationContentIds as $destinationContentId) {
-                                try {
-                                    $this->contentService->loadContentByRemoteId($destinationContentId);
-                                } catch (NotFoundException) {
-                                    $skippedContentFields[$content['remote_id']][$field][] = sprintf('Destination content with remote id %s does not exist.', $destinationContentId);
-                                }
-                            }
-                        } elseif ($fieldTypeIdentifier === 'eztags') {
-                            foreach ($value as $tag) {
-                                $tagRemoteId = $tag['remote_id'];
 
-                                try {
-                                    $this->tagMatcher->match(['remote_id' => $tagRemoteId]);
-                                } catch (NotFoundException) {
-                                    $skippedContentFields[$content['remote_id']][$field][] = sprintf('Tag with remote id %s does not exist.', $tagRemoteId);
-                                }
-                            }
-                        } elseif ($fieldTypeIdentifier === 'ezimage') {
-                            if ($value === null) {
-                                continue;
-                            }
+                        try {
+                            $fieldHandler = $this->registry->get($fieldTypeIdentifier);
+                        } catch (OutOfBoundsException) {
+                            continue;
+                        }
 
-                            $path = $value['path'];
+                        if (!method_exists($fieldHandler, 'skipsField')) {
+                            continue;
+                        }
 
-                            if (!is_file($this->container->getParameter('kernel.project_dir') . '/' . $this->storagePath . '/' . $path)) {
-                                $skippedContentFields[$content['remote_id']][$field] = sprintf('Image with path %s does not exist.', $path);
-                            }
-                        } elseif ($fieldTypeIdentifier === 'ezbinaryfile') {
-                            if ($value === null) {
-                                continue;
-                            }
-
-                            $path = $value['path'];
-
-                            if (!is_file($this->container->getParameter('kernel.project_dir') . '/' . $this->storagePath . '/' . $path)) {
-                                $skippedContentFields[$content['remote_id']][$field] = sprintf('File with path %s does not exist.', $path);
-                            }
-                        } elseif ($fieldTypeIdentifier === 'ngenhancedlink') {
-                            if ($value['is_internal']) {
-                                try {
-                                    $content = $this->contentService->loadContentByRemoteId($value['reference']);
-                                } catch (NotFoundException) {
-                                    $skippedContentFields[$content['remote_id']][$field] = sprintf('Internal content with remote id %s does not exist.', $value['reference']);
-                                }
+                        $skipsField = $fieldHandler->skipsField($value);
+                        if (is_string($skipsField)) {
+                            $skippedContentFields[$content['remote_id']][$fieldTypeIdentifier . '-' . $field][] = $skipsField;
+                        } elseif (is_array($skipsField) && count($skipsField) > 0) {
+                            foreach ($skipsField as $skippedField) {
+                                $skippedContentFields[$content['remote_id']][$fieldTypeIdentifier . '-' . $field][] = $skippedField;
                             }
                         }
                     }

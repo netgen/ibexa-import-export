@@ -13,6 +13,7 @@ use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
 
 use function array_key_exists;
 use function is_array;
+use function sprintf;
 
 final class EzRelation extends AbstractFieldHandler implements FieldValueConverterInterface, FieldDefinitionConverterInterface
 {
@@ -75,5 +76,19 @@ final class EzRelation extends AbstractFieldHandler implements FieldValueConvert
         return [
             'destinationContentId' => $destinationContentId,
         ];
+    }
+
+    public function skipsField(array $hash): bool|string
+    {
+        $destinationContentId = $hash['destinationContentId'];
+        if ($destinationContentId !== null) {
+            try {
+                $this->contentService->loadContentByRemoteId($destinationContentId);
+            } catch (NotFoundException) {
+                return sprintf('Destination content with remote id %s does not exist.', $destinationContentId);
+            }
+        }
+
+        return false;
     }
 }

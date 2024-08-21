@@ -11,6 +11,7 @@ use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
 
 use function count;
+use function sprintf;
 
 final class EzRelationList extends AbstractFieldHandler implements FieldValueConverterInterface
 {
@@ -55,5 +56,25 @@ final class EzRelationList extends AbstractFieldHandler implements FieldValueCon
         }
 
         return ['destinationContentIds' => $destinationContentRemoteIds];
+    }
+
+    public function skipsField(array $hash): array|bool
+    {
+        $skipsField = [];
+
+        $destinationContentIds = $hash['destinationContentIds'];
+        foreach ($destinationContentIds as $destinationContentId) {
+            try {
+                $this->contentService->loadContentByRemoteId($destinationContentId);
+            } catch (NotFoundException) {
+                $skipsField[] = sprintf('Destination content with remote id %s does not exist.', $destinationContentId);
+            }
+        }
+
+        if (count($skipsField) > 0) {
+            return $skipsField;
+        }
+
+        return false;
     }
 }

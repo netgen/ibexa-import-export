@@ -14,9 +14,11 @@ use Kaliop\eZMigrationBundle\Core\Matcher\TagMatcher;
 use Netgen\TagsBundle\Core\FieldType\Tags\Value;
 
 use function array_values;
+use function count;
 use function is_array;
 use function key;
 use function reset;
+use function sprintf;
 
 final class EzTags extends AbstractFieldHandler implements FieldValueConverterInterface
 {
@@ -90,5 +92,26 @@ final class EzTags extends AbstractFieldHandler implements FieldValueConverterIn
         }
 
         return $hash;
+    }
+
+    public function skipsField(array $hash): array|bool
+    {
+        $skipsField = [];
+
+        foreach ($hash as $tag) {
+            $tagRemoteId = $tag['remote_id'];
+
+            try {
+                $this->tagMatcher->match(['remote_id' => $tagRemoteId]);
+            } catch (NotFoundException) {
+                $skipsField[] = sprintf('Tag with remote id %s does not exist.', $tagRemoteId);
+            }
+        }
+
+        if (count($skipsField) > 0) {
+            return $skipsField;
+        }
+
+        return false;
     }
 }

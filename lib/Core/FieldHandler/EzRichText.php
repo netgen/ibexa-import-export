@@ -17,10 +17,12 @@ use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\API\ReferenceResolverInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
 
+use function count;
 use function is_array;
 use function is_string;
 use function mb_strlen;
 use function mb_substr;
+use function sprintf;
 use function str_starts_with;
 
 final class EzRichText extends AbstractFieldHandler implements FieldValueConverterInterface
@@ -184,5 +186,81 @@ final class EzRichText extends AbstractFieldHandler implements FieldValueConvert
         }
 
         return ['xml' => (string) $fieldValue];
+    }
+
+    public function skipsField($hash): array|bool
+    {
+        $skipsField = [];
+
+        if (is_string($hash)) {
+            $xmlText = $hash;
+        } elseif (is_array($hash) && isset($hash['xml'])) {
+            $xmlText = $hash['xml'];
+        } else {
+            $xmlText = $hash['content'];
+        }
+
+        $resolver = $this->referenceResolver;
+
+        /** @var EmbeddedReferenceResolverInterface $resolver */
+        $value = $resolver->resolveEmbeddedReferences($xmlText);
+
+        $doc = new DOMDocument();
+        $doc->loadXML($value);
+
+        $links = $doc->getElementsByTagName('link');
+
+        /** @var DOMElement $link */
+        foreach ($links as $link) {
+            $href = $link->getAttribute('xlink:href');
+
+            if (str_starts_with($href, 'ezlocation')) {
+                $id = mb_substr($href, mb_strlen('ezlocation://'));
+
+                try {
+                    $this->locationService->loadLocationByRemoteId($id);
+                } catch (NotFoundException) {
+                    $skipsField[] = sprintf('Linked location with remote id %s does not exist.', $id);
+                }
+            } elseif (str_starts_with($href, 'ezcontent')) {
+                $id = mb_substr($href, mb_strlen('ezcontent://'));
+
+                try {
+                    $this->contentService->loadContentByRemoteId($id);
+                } catch (NotFoundException) {
+                    $skipsField[] = sprintf('Linked content with remote id %s does not exist.', $id);
+                }
+            }
+        }
+
+        $embeds = $doc->getElementsByTagName('ezembed');
+        foreach ($embeds as $embed) {
+            $href = $embed->getAttribute('xlink:href');
+
+            if (str_starts_with($href, 'ezlocation')) {
+                $id = mb_substr($href, mb_strlen('ezlocation://'));
+
+                try {
+                    $this->locationService->loadLocationByRemoteId($id);
+                } catch (NotFoundException) {
+                    $skipsField[] = sprintf('Embedded content with remote id %s does not exist.', $id);
+                }
+            } elseif (str_starts_with($href, 'ezcontent')) {
+                $id = mb_substr($href, mb_strlen('ezcontent://'));
+
+                try {
+                    $content = $this->contentService->loadContentByRemoteId($id);
+                    $this->locationService->loadLocation((int) $content->contentInfo->mainLocationId);
+                } catch (NotFoundException) {
+                    $skipsField[] = sprintf('Embedded content with remote id %s does not exist.', $id);
+                }
+            }
+        }
+
+        if (count($skipsField) > 0) {
+            return $skipsField;
+        }
+
+        return false;
     }
 }

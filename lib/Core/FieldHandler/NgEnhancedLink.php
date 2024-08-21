@@ -10,6 +10,8 @@ use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
 use Netgen\IbexaFieldTypeEnhancedLink\FieldType\Value;
 
+use function sprintf;
+
 final class NgEnhancedLink extends AbstractFieldHandler implements FieldValueConverterInterface
 {
     public function __construct(
@@ -57,5 +59,18 @@ final class NgEnhancedLink extends AbstractFieldHandler implements FieldValueCon
         }
 
         return new Value();
+    }
+
+    public function skipsField(array $hash): bool|string
+    {
+        if ($hash['is_internal']) {
+            try {
+                $content = $this->contentService->loadContentByRemoteId($hash['reference']);
+            } catch (NotFoundException) {
+                return sprintf('Internal content with remote id %s does not exist.', $hash['reference']);
+            }
+        }
+
+        return false;
     }
 }

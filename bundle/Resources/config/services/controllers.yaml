@@ -26,6 +26,7 @@ services:
       - '@ez_migration_bundle.tag_matcher'
       - '%netgen_ibexa_import_export.storage_path%'
       - "@translator"
+      - '@Netgen\IbexaImportExportBundle\Registry\Registry'
 
   Netgen\IbexaImportExportBundle\Controller\Export\Download:
     public: true

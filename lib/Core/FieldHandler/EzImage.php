@@ -14,6 +14,7 @@ use function filesize;
 use function is_file;
 use function is_string;
 use function realpath;
+use function sprintf;
 
 final class EzImage extends FileFieldHandler implements FieldValueConverterInterface
 {
@@ -78,5 +79,20 @@ final class EzImage extends FileFieldHandler implements FieldValueConverterInter
             'filename' => $fieldValue->fileName,
             'alternativeText' => $fieldValue->alternativeText,
         ];
+    }
+
+    public function skipsField(?array $hash): bool|string
+    {
+        if ($hash === null) {
+            return false;
+        }
+
+        $path = $hash['path'];
+
+        if (!is_file($this->projectDirPath . '/' . $this->storagePath . '/' . $path)) {
+            return sprintf('Image with path %s does not exist.', $path);
+        }
+
+        return false;
     }
 }
