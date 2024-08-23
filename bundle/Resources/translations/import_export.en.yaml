@@ -17,3 +17,20 @@ netgen.ibexa_import_export.error.import.parent_location: 'You must enter parent 
 
 netgen.ibexa_import_export.success.export: 'Content successfully exported. Please download your export file.'
 netgen.ibexa_import_export.success.import: 'Content successfully imported.'
+
+netgen.ibexa_import_export.skip_field.binary_file: 'File with path file_path does not exist.'
+netgen.ibexa_import_export.skip_field.image: 'Image with path image_path does not exist.'
+netgen.ibexa_import_export.skip_field.relation: 'Destination content with remote id remote_id does not exist.'
+netgen.ibexa_import_export.skip_field.relation_list: 'Destination content with remote id remote_id does not exist.'
+netgen.ibexa_import_export.skip_field.rich_text.link.location: 'Linked location with remote id remote_id does not exist.'
+netgen.ibexa_import_export.skip_field.rich_text.link.content: 'Linked content with remote id remote_id does not exist.'
+netgen.ibexa_import_export.skip_field.rich_text.embed.location: 'Embedded location with remote id remote_id does not exist.'
+netgen.ibexa_import_export.skip_field.rich_text.embed.content: 'Embedded content with remote id remote_id does not exist.'
+netgen.ibexa_import_export.skip_field.tags: 'Tag with remote id remote_id does not exist.'
+netgen.ibexa_import_export.skip_field.enhanced_link: 'Internal content with remote id remote_id does not exist.'
+
+netgen.ibexa_import_export.form.export.migration_type: 'Export type'
+netgen.ibexa_import_export.form.export.source_structure: 'Source structure'
+netgen.ibexa_import_export.form.export.source: 'Source'
+netgen.ibexa_import_export.form.import.package: 'Exported file source'
+netgen.ibexa_import_export.form.import.parent_location: 'Import location'

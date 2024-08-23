@@ -3,6 +3,7 @@ services:
     parent: ez_migration_bundle.complex_field
     arguments:
       - '@ez_migration_bundle.tag_matcher'
+      - "@translator"
     tags:
       - { name: ez_migration_bundle.complex_field, fieldtype: eztags, priority: 0 }
 
@@ -10,6 +11,7 @@ services:
     parent: ez_migration_bundle.complex_field
     arguments:
       - "@ibexa.api.service.content"
+      - "@translator"
     tags:
       - { name: ez_migration_bundle.complex_field, fieldtype: ezobjectrelation, priority: 0 }
 
@@ -17,6 +19,7 @@ services:
     parent: ez_migration_bundle.complex_field
     arguments:
       - "@ibexa.api.service.content"
+      - "@translator"
     tags:
       - { name: ez_migration_bundle.complex_field, fieldtype: ezobjectrelationlist, priority: 0 }
 
@@ -25,6 +28,7 @@ services:
     arguments:
       - '%kernel.project_dir%'
       - '%netgen_ibexa_import_export.storage_path%'
+      - "@translator"
       - "$io.root_dir$"
       - "@?ibexa.core.io.default_url_decorator"
       - "@?ibexa.field_type.ezbinaryfile.io_service"
@@ -36,6 +40,7 @@ services:
     arguments:
       - '%kernel.project_dir%'
       - '%netgen_ibexa_import_export.storage_path%'
+      - "@translator"
       - "$io.root_dir$"
       - "@?ibexa.core.io.default_url_decorator"
       - '@ibexa.config.resolver'
@@ -47,6 +52,7 @@ services:
     arguments:
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
+      - "@translator"
       - '@ez_migration_bundle.reference_resolver.customreference'
     tags:
       - { name: ez_migration_bundle.complex_field, fieldtype: ezrichtext, priority: 0 }
@@ -55,5 +61,6 @@ services:
     parent: ez_migration_bundle.complex_field
     arguments:
       - "@ibexa.api.service.content"
+      - "@translator"
     tags:
       - { name: ez_migration_bundle.complex_field, fieldtype: ngenhancedlink, priority: 0 }

@@ -16,13 +16,13 @@ use Kaliop\eZMigrationBundle\API\Exception\MigrationBundleException;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\API\ReferenceResolverInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function count;
 use function is_array;
 use function is_string;
 use function mb_strlen;
 use function mb_substr;
-use function sprintf;
 use function str_starts_with;
 
 final class EzRichText extends AbstractFieldHandler implements FieldValueConverterInterface
@@ -30,6 +30,7 @@ final class EzRichText extends AbstractFieldHandler implements FieldValueConvert
     public function __construct(
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     /**
@@ -220,7 +221,11 @@ final class EzRichText extends AbstractFieldHandler implements FieldValueConvert
                 try {
                     $this->locationService->loadLocationByRemoteId($id);
                 } catch (NotFoundException) {
-                    $skipsField[] = sprintf('Linked location with remote id %s does not exist.', $id);
+                    $skipsField[] = $this->translator->trans(
+                        'netgen.ibexa_import_export.skip_field.rich_text.link.location',
+                        ['remote_id' => $id],
+                        'import_export',
+                    );
                 }
             } elseif (str_starts_with($href, 'ezcontent')) {
                 $id = mb_substr($href, mb_strlen('ezcontent://'));
@@ -228,7 +233,11 @@ final class EzRichText extends AbstractFieldHandler implements FieldValueConvert
                 try {
                     $this->contentService->loadContentByRemoteId($id);
                 } catch (NotFoundException) {
-                    $skipsField[] = sprintf('Linked content with remote id %s does not exist.', $id);
+                    $skipsField[] = $this->translator->trans(
+                        'netgen.ibexa_import_export.skip_field.rich_text.link.content',
+                        ['remote_id' => $id],
+                        'import_export',
+                    );
                 }
             }
         }
@@ -243,7 +252,11 @@ final class EzRichText extends AbstractFieldHandler implements FieldValueConvert
                 try {
                     $this->locationService->loadLocationByRemoteId($id);
                 } catch (NotFoundException) {
-                    $skipsField[] = sprintf('Embedded content with remote id %s does not exist.', $id);
+                    $skipsField[] = $this->translator->trans(
+                        'netgen.ibexa_import_export.skip_field.rich_text.embed.location',
+                        ['remote_id' => $id],
+                        'import_export',
+                    );
                 }
             } elseif (str_starts_with($href, 'ezcontent')) {
                 $id = mb_substr($href, mb_strlen('ezcontent://'));
@@ -252,7 +265,11 @@ final class EzRichText extends AbstractFieldHandler implements FieldValueConvert
                     $content = $this->contentService->loadContentByRemoteId($id);
                     $this->locationService->loadLocation((int) $content->contentInfo->mainLocationId);
                 } catch (NotFoundException) {
-                    $skipsField[] = sprintf('Embedded content with remote id %s does not exist.', $id);
+                    $skipsField[] = $this->translator->trans(
+                        'netgen.ibexa_import_export.skip_field.rich_text.embed.content',
+                        ['remote_id' => $id],
+                        'import_export',
+                    );
                 }
             }
         }

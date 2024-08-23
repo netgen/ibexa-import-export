@@ -8,19 +8,20 @@ use Ibexa\Core\FieldType\Image\Value as ImageValue;
 use Ibexa\Core\IO\UrlDecorator;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\FileFieldHandler;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function basename;
 use function filesize;
 use function is_file;
 use function is_string;
 use function realpath;
-use function sprintf;
 
 final class EzImage extends FileFieldHandler implements FieldValueConverterInterface
 {
     public function __construct(
         private readonly string $projectDirPath,
         private readonly string $storagePath,
+        private readonly TranslatorInterface $translator,
         $ioRootDir,
         ?UrlDecorator $ioDecorator = null,
         $ioService = null,
@@ -90,7 +91,11 @@ final class EzImage extends FileFieldHandler implements FieldValueConverterInter
         $path = $hash['path'];
 
         if (!is_file($this->projectDirPath . '/' . $this->storagePath . '/' . $path)) {
-            return sprintf('Image with path %s does not exist.', $path);
+            return $this->translator->trans(
+                'netgen.ibexa_import_export.skip_field.image',
+                ['image_path' => $path],
+                'import_export',
+            );
         }
 
         return false;

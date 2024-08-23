@@ -9,13 +9,13 @@ use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
 use Netgen\IbexaFieldTypeEnhancedLink\FieldType\Value;
-
-use function sprintf;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class NgEnhancedLink extends AbstractFieldHandler implements FieldValueConverterInterface
 {
     public function __construct(
         private readonly ContentService $contentService,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     public function fieldValueToHash($fieldValue, array $context = []): array
@@ -67,7 +67,11 @@ final class NgEnhancedLink extends AbstractFieldHandler implements FieldValueCon
             try {
                 $content = $this->contentService->loadContentByRemoteId($hash['reference']);
             } catch (NotFoundException) {
-                return sprintf('Internal content with remote id %s does not exist.', $hash['reference']);
+                return $this->translator->trans(
+                    'netgen.ibexa_import_export.skip_field.enhanced_link',
+                    ['remote_id' => $hash['reference']],
+                    'import_export',
+                );
             }
         }
 

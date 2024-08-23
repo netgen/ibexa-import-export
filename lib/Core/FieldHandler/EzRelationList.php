@@ -9,14 +9,15 @@ use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Core\FieldType\RelationList\Value;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function count;
-use function sprintf;
 
 final class EzRelationList extends AbstractFieldHandler implements FieldValueConverterInterface
 {
     public function __construct(
         private readonly ContentService $contentService,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     public function hashToFieldValue($fieldHash, array $context = []): Value
@@ -67,7 +68,11 @@ final class EzRelationList extends AbstractFieldHandler implements FieldValueCon
             try {
                 $this->contentService->loadContentByRemoteId($destinationContentId);
             } catch (NotFoundException) {
-                $skipsField[] = sprintf('Destination content with remote id %s does not exist.', $destinationContentId);
+                $skipsField[] = $this->translator->trans(
+                    'netgen.ibexa_import_export.skip_field.relation_list',
+                    ['remote_id' => $destinationContentId],
+                    'import_export',
+                );
             }
         }
 

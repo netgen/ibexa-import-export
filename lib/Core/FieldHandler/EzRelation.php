@@ -10,15 +10,16 @@ use Ibexa\Core\FieldType\Relation\Value;
 use Kaliop\eZMigrationBundle\API\FieldDefinitionConverterInterface;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function array_key_exists;
 use function is_array;
-use function sprintf;
 
 final class EzRelation extends AbstractFieldHandler implements FieldValueConverterInterface, FieldDefinitionConverterInterface
 {
     public function __construct(
         private readonly ContentService $contentService,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     public function hashToFieldValue($fieldHash, array $context = []): Value
@@ -85,7 +86,11 @@ final class EzRelation extends AbstractFieldHandler implements FieldValueConvert
             try {
                 $this->contentService->loadContentByRemoteId($destinationContentId);
             } catch (NotFoundException) {
-                return sprintf('Destination content with remote id %s does not exist.', $destinationContentId);
+                return $this->translator->trans(
+                    'netgen.ibexa_import_export.skip_field.relation',
+                    ['remote_id' => $destinationContentId],
+                    'import_export',
+                );
             }
         }
 

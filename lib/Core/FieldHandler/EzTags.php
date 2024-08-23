@@ -12,18 +12,19 @@ use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
 use Kaliop\eZMigrationBundle\Core\Matcher\TagMatcher;
 use Netgen\TagsBundle\Core\FieldType\Tags\Value;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function array_values;
 use function count;
 use function is_array;
 use function key;
 use function reset;
-use function sprintf;
 
 final class EzTags extends AbstractFieldHandler implements FieldValueConverterInterface
 {
     public function __construct(
         private readonly TagMatcher $tagMatcher,
+        private readonly TranslatorInterface $translator,
     ) {}
 
     /**
@@ -104,7 +105,11 @@ final class EzTags extends AbstractFieldHandler implements FieldValueConverterIn
             try {
                 $this->tagMatcher->match(['remote_id' => $tagRemoteId]);
             } catch (NotFoundException) {
-                $skipsField[] = sprintf('Tag with remote id %s does not exist.', $tagRemoteId);
+                $skipsField[] = $this->translator->trans(
+                    'netgen.ibexa_import_export.skip_field.tags',
+                    ['remote_id' => $tagRemoteId],
+                    'import_export',
+                );
             }
         }
 
