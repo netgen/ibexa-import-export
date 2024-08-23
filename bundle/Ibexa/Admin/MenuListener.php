@@ -25,12 +25,9 @@ final class MenuListener implements EventSubscriberInterface
             return;
         }
 
-        $menu[MainMenuBuilder::ITEM_ADMIN]->addChild(
-            'import_export',
-            [
-                'label' => 'Import/Export',
-                'route' => 'netgen_import_export.route.admin.index',
-            ],
-        );
+        $menu[MainMenuBuilder::ITEM_ADMIN]
+            ->addChild('import_export', ['route' => 'netgen_import_export.route.admin.index'])
+            ->setLabel('netgen.ibexa_import_export.title')
+            ->setExtra('translation_domain', 'import_export');
     }
 }
