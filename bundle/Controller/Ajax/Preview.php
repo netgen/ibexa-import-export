@@ -8,15 +8,12 @@ use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\ContentTypeService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Contracts\Core\Repository\LocationService;
-use Kaliop\eZMigrationBundle\Core\Matcher\TagMatcher;
 use Netgen\IbexaImportExportBundle\Registry\Registry;
 use OutOfBoundsException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Yaml\Yaml;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function array_key_exists;
 use function count;
@@ -36,15 +33,12 @@ final class Preview extends AbstractController
         private readonly ContentTypeService $contentTypeService,
         private readonly LocationService $locationService,
         private readonly ContentService $contentService,
-        private readonly TagMatcher $tagMatcher,
-        private readonly string $storagePath,
-        private readonly TranslatorInterface $translator,
         private readonly Registry $registry,
     ) {}
 
     public function __invoke(Request $request): Response
     {
-        /** @var UploadedFile $file */
+        /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
         $file = $request->files->get('file');
         $originalFilename = $file->getClientOriginalName();
         $errors = [];

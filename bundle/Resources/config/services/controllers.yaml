@@ -23,9 +23,6 @@ services:
       - "@ibexa.api.service.content_type"
       - "@ibexa.api.service.location"
       - "@ibexa.api.service.content"
-      - '@ez_migration_bundle.tag_matcher'
-      - '%netgen_ibexa_import_export.storage_path%'
-      - "@translator"
       - '@Netgen\IbexaImportExportBundle\Registry\Registry'
 
   Netgen\IbexaImportExportBundle\Controller\Export\Download:

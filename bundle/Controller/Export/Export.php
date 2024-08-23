@@ -28,8 +28,6 @@ use function str_replace;
 
 final class Export extends AbstractController
 {
-    private const TRANSLATION_DOMAIN = 'import_export';
-
     public function __construct(
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
@@ -49,7 +47,7 @@ final class Export extends AbstractController
                 $this->translator->trans(
                     'netgen.ibexa_import_export.error.php',
                     [],
-                    $this::TRANSLATION_DOMAIN,
+                    'import_export',
                 ),
             );
         }
@@ -75,7 +73,7 @@ final class Export extends AbstractController
                     $this->translator->trans(
                         'netgen.ibexa_import_export.error.export.content',
                         [],
-                        $this::TRANSLATION_DOMAIN,
+                        'import_export',
                     ),
                 );
 
@@ -161,7 +159,7 @@ final class Export extends AbstractController
                     $this->translator->trans(
                         'netgen.ibexa_import_export.success.export',
                         [],
-                        $this::TRANSLATION_DOMAIN,
+                        'import_export',
                     ),
                 );
             }

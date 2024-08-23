@@ -10,7 +10,7 @@ use DOMNode;
 use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Contracts\Core\Repository\LocationService;
-use Ibexa\FieldTypeRichText\FieldType\RichText\Value;
+use Ibexa\FieldTypeRichText\FieldType\RichText\Value as RichTextValue;
 use Kaliop\eZMigrationBundle\API\EmbeddedReferenceResolverInterface;
 use Kaliop\eZMigrationBundle\API\Exception\MigrationBundleException;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
@@ -56,7 +56,7 @@ final class EzRichText extends AbstractFieldHandler implements FieldValueConvert
 
         $resolver = $this->referenceResolver;
 
-        /** @var EmbeddedReferenceResolverInterface $resolver */
+        /** @var \Kaliop\eZMigrationBundle\API\EmbeddedReferenceResolverInterface $resolver */
         $value = $resolver->resolveEmbeddedReferences($xmlText);
 
         $doc = new DOMDocument();
@@ -127,7 +127,7 @@ final class EzRichText extends AbstractFieldHandler implements FieldValueConvert
 
     public function fieldValueToHash($fieldValue, array $context = []): array
     {
-        /** @var Value $fieldValue */
+        /** @var \Ibexa\FieldTypeRichText\FieldType\RichText\Value $fieldValue */
         $links = $fieldValue->xml->getElementsByTagName('link');
         foreach ($links as $link) {
             $href = $link->getAttribute('xlink:href');
@@ -203,7 +203,7 @@ final class EzRichText extends AbstractFieldHandler implements FieldValueConvert
 
         $resolver = $this->referenceResolver;
 
-        /** @var EmbeddedReferenceResolverInterface $resolver */
+        /** @var \Kaliop\eZMigrationBundle\API\EmbeddedReferenceResolverInterface $resolver */
         $value = $resolver->resolveEmbeddedReferences($xmlText);
 
         $doc = new DOMDocument();

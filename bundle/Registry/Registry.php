@@ -12,12 +12,12 @@ use function sprintf;
 final class Registry
 {
     /**
-     * @var AbstractFieldHandler[]
+     * @var \Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler[]
      */
     private array $handlerMap = [];
 
     /**
-     * @param AbstractFieldHandler[] $handlerMap
+     * @param \Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler[] $handlerMap
      */
     public function __construct(array $handlerMap = [])
     {

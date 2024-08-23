@@ -12,7 +12,6 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Process\PhpExecutableFinder;
@@ -28,8 +27,6 @@ use function sprintf;
 
 final class Import extends AbstractController
 {
-    private const TRANSLATION_DOMAIN = 'import_export';
-
     public function __construct(
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
@@ -46,7 +43,7 @@ final class Import extends AbstractController
 
         if ($phpPath === false) {
             throw new RuntimeException(
-                $this->translator->trans('netgen.ibexa_import_export.error.php', domain: $this::TRANSLATION_DOMAIN),
+                $this->translator->trans('netgen.ibexa_import_export.error.php', [], 'import_export'),
             );
         }
 
@@ -58,7 +55,7 @@ final class Import extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var UploadedFile $uploadedFile */
+            /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $uploadedFile */
             $uploadedFile = $form->get('package')->getData();
 
             $yamlParsed = Yaml::parseFile($uploadedFile->getRealPath());
@@ -74,7 +71,8 @@ final class Import extends AbstractController
                         'error',
                         $this->translator->trans(
                             'netgen.ibexa_import_export.error.import.parent_location',
-                            domain: $this::TRANSLATION_DOMAIN,
+                            [],
+                            'import_export',
                         ),
                     );
 
@@ -144,7 +142,8 @@ final class Import extends AbstractController
                     'error',
                     $this->translator->trans(
                         'netgen.ibexa_import_export.error.import',
-                        domain: $this::TRANSLATION_DOMAIN,
+                        [],
+                        'import_export',
                     ),
                 );
             }
@@ -153,7 +152,8 @@ final class Import extends AbstractController
                 'success',
                 $this->translator->trans(
                     'netgen.ibexa_import_export.success.import',
-                    domain: $this::TRANSLATION_DOMAIN,
+                    [],
+                    'import_export',
                 ),
             );
 

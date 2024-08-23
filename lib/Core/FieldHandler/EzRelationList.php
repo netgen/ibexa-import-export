@@ -6,7 +6,7 @@ namespace Netgen\IbexaImportExport\Core\FieldHandler;
 
 use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
-use Ibexa\Core\FieldType\RelationList\Value;
+use Ibexa\Core\FieldType\RelationList\Value as RelationListValue;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -20,7 +20,7 @@ final class EzRelationList extends AbstractFieldHandler implements FieldValueCon
         private readonly TranslatorInterface $translator,
     ) {}
 
-    public function hashToFieldValue($fieldHash, array $context = []): Value
+    public function hashToFieldValue($fieldHash, array $context = []): RelationListValue
     {
         if ($fieldHash === null) {
             $ids = [];
@@ -41,7 +41,7 @@ final class EzRelationList extends AbstractFieldHandler implements FieldValueCon
             }
         }
 
-        return new Value($ids);
+        return new RelationListValue($ids);
     }
 
     public function fieldValueToHash($fieldValue, array $context = []): array

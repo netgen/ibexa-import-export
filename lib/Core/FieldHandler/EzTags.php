@@ -11,7 +11,7 @@ use Kaliop\eZMigrationBundle\API\Exception\InvalidStepDefinitionException;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
 use Kaliop\eZMigrationBundle\Core\Matcher\TagMatcher;
-use Netgen\TagsBundle\Core\FieldType\Tags\Value;
+use Netgen\TagsBundle\Core\FieldType\Tags\Value as TagsValue;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function array_values;
@@ -33,7 +33,7 @@ final class EzTags extends AbstractFieldHandler implements FieldValueConverterIn
      * @throws InvalidMatchConditionsException
      * @throws InvalidStepDefinitionException
      */
-    public function hashToFieldValue($fieldHash, array $context = []): Value
+    public function hashToFieldValue($fieldHash, array $context = []): TagsValue
     {
         $tags = [];
         foreach ($fieldHash as $def) {
@@ -57,12 +57,12 @@ final class EzTags extends AbstractFieldHandler implements FieldValueConverterIn
             }
         }
 
-        return new Value(array_values($tags));
+        return new TagsValue(array_values($tags));
     }
 
     public function fieldValueToHash($fieldValue, array $context = []): array
     {
-        /** @var Value $fieldValue */
+        /** @var \Netgen\TagsBundle\Core\FieldType\Tags\Value $fieldValue */
         $hash = [];
         foreach ($fieldValue->tags as $tag) {
             if ($tag->id === null || $tag->id < 1) {

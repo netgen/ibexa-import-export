@@ -8,7 +8,7 @@ use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
-use Netgen\IbexaFieldTypeEnhancedLink\FieldType\Value;
+use Netgen\IbexaFieldTypeEnhancedLink\FieldType\Value as EnhancedLinkValue;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class NgEnhancedLink extends AbstractFieldHandler implements FieldValueConverterInterface
@@ -39,7 +39,7 @@ final class NgEnhancedLink extends AbstractFieldHandler implements FieldValueCon
         ];
     }
 
-    public function hashToFieldValue($fieldHash, array $context = []): Value
+    public function hashToFieldValue($fieldHash, array $context = []): EnhancedLinkValue
     {
         if ($fieldHash !== null) {
             $reference = $fieldHash['reference'];
@@ -54,18 +54,18 @@ final class NgEnhancedLink extends AbstractFieldHandler implements FieldValueCon
                     }
                 }
 
-                return new Value($reference, $fieldHash['label'], $fieldHash['target'], $fieldHash['suffix']);
+                return new EnhancedLinkValue($reference, $fieldHash['label'], $fieldHash['target'], $fieldHash['suffix']);
             }
         }
 
-        return new Value();
+        return new EnhancedLinkValue();
     }
 
     public function skipsField(array $hash): bool|string
     {
         if ($hash['is_internal']) {
             try {
-                $content = $this->contentService->loadContentByRemoteId($hash['reference']);
+                $this->contentService->loadContentByRemoteId($hash['reference']);
             } catch (NotFoundException) {
                 return $this->translator->trans(
                     'netgen.ibexa_import_export.skip_field.enhanced_link',

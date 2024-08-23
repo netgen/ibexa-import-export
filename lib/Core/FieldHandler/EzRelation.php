@@ -6,7 +6,7 @@ namespace Netgen\IbexaImportExport\Core\FieldHandler;
 
 use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
-use Ibexa\Core\FieldType\Relation\Value;
+use Ibexa\Core\FieldType\Relation\Value as RelationValue;
 use Kaliop\eZMigrationBundle\API\FieldDefinitionConverterInterface;
 use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
@@ -22,7 +22,7 @@ final class EzRelation extends AbstractFieldHandler implements FieldValueConvert
         private readonly TranslatorInterface $translator,
     ) {}
 
-    public function hashToFieldValue($fieldHash, array $context = []): Value
+    public function hashToFieldValue($fieldHash, array $context = []): RelationValue
     {
         if (is_array($fieldHash) && array_key_exists('destinationContentId', $fieldHash)) {
             // fromHash format
@@ -33,7 +33,7 @@ final class EzRelation extends AbstractFieldHandler implements FieldValueConvert
         }
 
         if ($id === null) {
-            return new Value();
+            return new RelationValue();
         }
 
         $id = $this->referenceResolver->resolveReference($id);
@@ -41,9 +41,9 @@ final class EzRelation extends AbstractFieldHandler implements FieldValueConvert
         try {
             $relatedContent = $this->contentService->loadContentByRemoteId($id);
 
-            return new Value($relatedContent->id);
+            return new RelationValue($relatedContent->id);
         } catch (NotFoundException) {
-            return new Value();
+            return new RelationValue();
         }
     }
 
