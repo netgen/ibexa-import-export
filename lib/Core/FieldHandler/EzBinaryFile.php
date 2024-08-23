@@ -10,7 +10,6 @@ use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\FileFieldHandler;
 
 use function basename;
-use function dump;
 use function filesize;
 use function is_file;
 use function is_string;
@@ -73,10 +72,6 @@ final class EzBinaryFile extends FileFieldHandler implements FieldValueConverter
 
     public function fieldValueToHash($fieldValue, array $context = []): ?array
     {
-        dump($this->ioRootDir);
-        dump(realpath($this->ioRootDir));
-
-        exit;
         if ($fieldValue->uri === null) {
             return null;
         }
