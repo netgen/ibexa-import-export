@@ -28,18 +28,22 @@ use function sprintf;
 final class Import extends AbstractController
 {
     public function __construct(
-        private readonly ContentService $contentService,
-        private readonly LocationService $locationService,
-        private readonly string $migrationsPath,
+        private readonly ContentService      $contentService,
+        private readonly LocationService     $locationService,
+        private readonly string              $migrationsPath,
+        private readonly ?string             $phpBinaryPath,
         private readonly TranslatorInterface $translator,
-        private readonly LoggerInterface $logger = new NullLogger(),
+        private readonly LoggerInterface     $logger = new NullLogger(),
     ) {}
 
     public function __invoke(Request $request): Response
     {
-        $phpFinder = new PhpExecutableFinder();
+        $phpPath = $this->phpBinaryPath;
 
-        $phpPath = $phpFinder->find();
+        if ($phpPath === null || $phpPath === '') {
+            $phpFinder = new PhpExecutableFinder();
+            $phpPath = $phpFinder->find();
+        }
 
         if ($phpPath === false) {
             throw new RuntimeException(
@@ -118,6 +122,7 @@ final class Import extends AbstractController
 
             $process = new Process(
                 [
+                    $phpPath,
                     '../bin/console',
                     'kaliop:migration:migrate',
                     '--path=' . $newFilePath,

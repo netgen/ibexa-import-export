@@ -24,6 +24,7 @@ final class Configuration implements ConfigurationInterface
 
         $this->addStoragePath($rootNode);
         $this->addMigrationsPath($rootNode);
+        $this->addPhpBinaryPath($rootNode);
 
         return $treeBuilder;
     }
@@ -47,6 +48,17 @@ final class Configuration implements ConfigurationInterface
             ->info('Configure path where migrations will be saved')
             ->defaultValue('var/cache/migrations')
             ->end()
+            ?->end();
+    }
+
+    private function addPhpBinaryPath(ArrayNodeDefinition $nodeDefinition): void
+    {
+        $nodeDefinition
+            ->children()
+                ->scalarNode('php_binary_path')
+                    ->info('Configure the PHP binary path used to run console commands (leave null to auto-detect)')
+                    ->defaultNull()
+                ->end()
             ?->end();
     }
 }

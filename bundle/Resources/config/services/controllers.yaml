@@ -12,6 +12,7 @@ services:
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
       - '%netgen_ibexa_import_export.migrations_path%'
+      - '%netgen_ibexa_import_export.php_binary_path%'
       - "@translator"
       - '@?logger'
 
@@ -40,5 +41,6 @@ services:
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
       - '%netgen_ibexa_import_export.migrations_path%'
+      - '%netgen_ibexa_import_export.php_binary_path%'
       - "@translator"
       - '@?logger'

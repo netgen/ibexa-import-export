@@ -51,6 +51,7 @@ final class NetgenIbexaImportExportExtension extends Extension
 
         $this->processStoragePathConfiguration($configuration, $container);
         $this->processMigrationsPathConfiguration($configuration, $container);
+        $this->processPhpBinaryPathConfiguration($configuration, $container);
     }
 
     private function processStoragePathConfiguration(array $configuration, ContainerBuilder $container): void
@@ -66,6 +67,14 @@ final class NetgenIbexaImportExportExtension extends Extension
         $container->setParameter(
             'netgen_ibexa_import_export.migrations_path',
             $configuration['migrations_path'],
+        );
+    }
+
+    private function processPhpBinaryPathConfiguration(array $configuration, ContainerBuilder $container): void
+    {
+        $container->setParameter(
+            'netgen_ibexa_import_export.php_binary_path',
+            $configuration['php_binary_path'],
         );
     }
 }
