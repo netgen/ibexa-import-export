@@ -62,18 +62,22 @@ final class Preview extends AbstractController
             $importMode = $yamlParsed[0]['mode'];
 
             foreach ($yamlParsed as $content) {
+                $contentRemoteId = $importMode === 'update' ? $content['match']['content_remote_id'] : $content['remote_id'];
+
                 if ($importMode === 'create') {
                     try {
                         $contentType = $this->contentTypeService->loadContentTypeByIdentifier($content['content_type']);
                     } catch (NotFoundException) {
-                        $skippedContent[$content['remote_id']][] = sprintf('Content type with identifier %s does not exist.', $content['content_type']);
+                        $skippedContent[$contentRemoteId]['name'] = $content['exported_content_name'];
+                        $skippedContent[$contentRemoteId]['messages'][] = sprintf('Content type with identifier %s does not exist.', $content['content_type']);
 
                         continue;
                     }
 
                     try {
                         $this->contentService->loadContentByRemoteId($content['remote_id']);
-                        $skippedContent[$content['remote_id']][] = sprintf('Content with remote id %s already exists.', $content['remote_id']);
+                        $skippedContent[$contentRemoteId]['name'] = $content['exported_content_name'];
+                        $skippedContent[$contentRemoteId]['messages'][] = sprintf('Content with remote id %s already exists.', $content['remote_id']);
 
                         continue;
                     } catch (NotFoundException) {
@@ -82,7 +86,8 @@ final class Preview extends AbstractController
 
                     try {
                         $this->locationService->loadLocationByRemoteId($content['location_remote_id']);
-                        $skippedContent[$content['remote_id']][] = sprintf('Content with location remote id %s already exists.', $content['location_remote_id']);
+                        $skippedContent[$contentRemoteId]['name'] = $content['exported_content_name'];
+                        $skippedContent[$contentRemoteId]['messages'][] = sprintf('Content with location remote id %s already exists.', $content['location_remote_id']);
 
                         continue;
                     } catch (NotFoundException) {
@@ -90,9 +95,10 @@ final class Preview extends AbstractController
                     }
                 } elseif ($importMode === 'update') {
                     try {
-                        $updateContent = $this->contentService->loadContentByRemoteId($content['match']['content_remote_id']);
+                        $updateContent = $this->contentService->loadContentByRemoteId($contentRemoteId);
                     } catch (NotFoundException) {
-                        $skippedContent[$content['remote_id']][] = sprintf('Content with remote id %s does not exist.', $content['remote_id']);
+                        $skippedContent[$contentRemoteId]['name'] = $content['exported_content_name'];
+                        $skippedContent[$contentRemoteId]['messages'][] = sprintf('Content with remote id %s does not exist.', $contentRemoteId);
 
                         continue;
                     }
@@ -101,8 +107,8 @@ final class Preview extends AbstractController
                 }
 
                 if (
-                    $importMode === 'create' && !array_key_exists($content['remote_id'], $skippedContent)
-                    || $importMode === 'update' && !array_key_exists($content['match']['content_remote_id'], $skippedContent)
+                    $importMode === 'create' && !array_key_exists($contentRemoteId, $skippedContent)
+                    || $importMode === 'update' && !array_key_exists($contentRemoteId, $skippedContent)
                 ) {
                     $attributes = $content['attributes'];
                     foreach ($attributes as $field => $value) {
@@ -120,10 +126,12 @@ final class Preview extends AbstractController
 
                         $skipsField = $fieldHandler->skipsField($value);
                         if (is_string($skipsField)) {
-                            $skippedContentFields[$content['remote_id']][$fieldTypeIdentifier . '-' . $field][] = $skipsField;
+                            $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skipsField;
+                            $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
                         } elseif (is_array($skipsField) && count($skipsField) > 0) {
                             foreach ($skipsField as $skippedField) {
-                                $skippedContentFields[$content['remote_id']][$fieldTypeIdentifier . '-' . $field][] = $skippedField;
+                                $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skippedField;
+                                $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
                             }
                         }
                     }

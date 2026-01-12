@@ -144,14 +144,14 @@ final class Export extends AbstractController
                 $filePath = $projectRoot . '/' . $this->migrationsPath . '/' . $fileName;
                 $yamlParsed = Yaml::parseFile($filePath);
 
-                /*
-                 * @phpstan-ignore-next-line
-                 */
                 foreach ($yamlParsed as &$content) {
                     if ($migrationType === 'create') {
                         $location = $this->locationService->loadLocation($content['parent_location']);
                         $locationRemoteId = $location->remoteId;
                         $content['parent_location'] = $locationRemoteId;
+                        $content['exported_content_name'] = $this->contentService->loadContentByRemoteId($content['remote_id'])->getName();
+                    }elseif ($migrationType === 'update'){
+                        $content['exported_content_name'] = $this->contentService->loadContentByRemoteId($content['new_remote_id'])->getName();
                     }
                 }
 

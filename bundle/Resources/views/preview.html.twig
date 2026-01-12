@@ -31,11 +31,11 @@
     {% if skipped_content is defined and skipped_content is not empty %}
         <div id="ibexa-import-export__import-preview-skipped-content" class="ibexa-import-export-preview__section ibexa-import-export-preview__warning-block">
             <h2 class="ibexa-import-export-preview__warning-title">{{ 'netgen.ibexa_import_export.preview.skipped_content'|trans|desc('Skipped content') }}</h2>
-            {% for id, errors in skipped_content %}
+            {% for id, item in skipped_content %}
                 <div class="ibexa-import-export-preview__skipped-item">
-                    <h3 class="ibexa-import-export-preview__skipped-id">{{ 'netgen.ibexa_import_export.preview.remote_id'|trans|desc('Remote ID') }}: <code>{{ id }}</code></h3>
+                    <h3 class="ibexa-import-export-preview__skipped-id">{{ item.name }} : <code>{{ id }}</code></h3>
                     <ul class="ibexa-import-export-preview__skipped-errors">
-                        {% for error in errors %}
+                        {% for error in item.messages|default([]) %}
                             <li class="ibexa-import-export-preview__error-message">{{ error }}</li>
                         {% endfor %}
                     </ul>
@@ -48,11 +48,11 @@
     {% if skipped_content_fields is defined and skipped_content_fields is not empty %}
         <div id="ibexa-import-export__import-preview-skipped-fields" class="ibexa-import-export-preview__section ibexa-import-export-preview__warning-block ibexa-import-export-preview__detailed-warning">
             <h2 class="ibexa-import-export-preview__warning-title">{{ 'netgen.ibexa_import_export.preview.skipped_fields'|trans|desc('Skipped fields') }}</h2>
-            {% for id, errors in skipped_content_fields %}
+            {% for id, item in skipped_content_fields %}
                 <div class="ibexa-import-export-preview__skipped-item">
-                    <h3 class="ibexa-import-export-preview__skipped-id">{{ 'netgen.ibexa_import_export.preview.remote_id'|trans|desc('Remote ID') }}: <code>{{ id }}</code></h3>
+                    <h3 class="ibexa-import-export-preview__skipped-id">{{ item.name }} : <code>{{ id }}</code></h3>
                     <ul class="ibexa-import-export-preview__field-errors">
-                        {% for error_type, error_data in errors %}
+                        {% for error_type, error_data in item.fields|default([]) %}
                             <li class="ibexa-import-export-preview__field-error">
                                 <strong>{{ error_type }}</strong>
                                 {% if error_data is iterable %}
