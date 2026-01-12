@@ -16,6 +16,7 @@ netgen.ibexa_import_export.error.import: 'Import failed. Please check your logs 
 netgen.ibexa_import_export.error.import.parent_location: 'You must enter parent location where you want to import your content.'
 
 netgen.ibexa_import_export.success.export: 'Content successfully exported. Please download your export file.'
+netgen.ibexa_import_export.success.export.file_ready: 'Your export file is ready.'
 netgen.ibexa_import_export.success.import: 'Content successfully imported.'
 
 netgen.ibexa_import_export.skip_field.binary_file: 'File with path file_path does not exist.'

@@ -5,7 +5,7 @@
 {% block breadcrumbs %}
     {% include '@ibexadesign/ui/breadcrumbs.html.twig' with { items: [
         { value: 'breadcrumb.admin'|trans(domain='messages')|desc('Admin') },
-        { value: 'netgen.ibexa_import_export.title'|trans|desc('Import/Export') },
+        { value: 'netgen.ibexa_import_export.title'|trans|desc('Import/Export'), }
     ]} %}
 {% endblock %}
 
@@ -16,8 +16,29 @@
 {% endblock %}
 
 {% block content %}
-    <section class="container ibexa-container">
-        <p><a class="btn btn-primary" href="{{ path('netgen_import_export.route.admin.import') }}">{{ 'netgen.ibexa_import_export.import'|trans|desc('Import') }}</a></p>
-        <p><a class="btn btn-primary" href="{{ path('netgen_import_export.route.admin.export') }}">{{ 'netgen.ibexa_import_export.export'|trans|desc('Export') }}</a></p>
+    <section class="container ibexa-container ibexa-import-export__index">
+
+        <div class="ibexa-import-export__action-cards-wrapper">
+
+            {# Import Button Card #}
+            <div class="ibexa-import-export__action-card ibexa-import-export__action-card--import">
+                <h3 class="ibexa-import-export__card-title">{{ 'netgen.ibexa_import_export.import'|trans|desc('Import') }}</h3>
+                <p class="ibexa-import-export__card-description">{{ 'netgen.ibexa_import_export.index.import_description'|trans|desc('Upload a package file to import content into the site.') }}</p>
+                <a class="ibexa-import-export__action-btn btn ibexa-btn ibexa-btn--primary" href="{{ path('netgen_import_export.route.admin.import') }}">
+                    {{ 'netgen.ibexa_import_export.import'|trans|desc('Import') }}
+                </a>
+            </div>
+
+            {# Export Button Card #}
+            <div class="ibexa-import-export__action-card ibexa-import-export__action-card--export">
+                <h3 class="ibexa-import-export__card-title">{{ 'netgen.ibexa_import_export.export'|trans|desc('Export') }}</h3>
+                <p class="ibexa-import-export__card-description">{{ 'netgen.ibexa_import_export.index.export_description'|trans|desc('Generate and download a package file containing selected content.') }}</p>
+                <a class="ibexa-import-export__action-btn btn ibexa-btn ibexa-btn--secondary" href="{{ path('netgen_import_export.route.admin.export') }}">
+                    {{ 'netgen.ibexa_import_export.export'|trans|desc('Export') }}
+                </a>
+            </div>
+
+        </div>
+
     </section>
 {% endblock %}
