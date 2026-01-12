@@ -61,7 +61,7 @@ final class Preview extends AbstractController
             }
             $importMode = $yamlParsed[0]['mode'];
 
-            foreach ($yamlParsed as &$content) {
+            foreach ($yamlParsed as $content) {
                 if ($importMode === 'create') {
                     try {
                         $contentType = $this->contentTypeService->loadContentTypeByIdentifier($content['content_type']);
@@ -97,13 +97,7 @@ final class Preview extends AbstractController
                         continue;
                     }
 
-                    try {
-                        $contentType = $updateContent->getContentType();
-                    } catch (NotFoundException) {
-                        $skippedContent[$content['remote_id']][] = sprintf('Content type with identifier %s does not exist.', $content['content_type']);
-
-                        continue;
-                    }
+                    $contentType = $updateContent->getContentType();
                 }
 
                 if (
