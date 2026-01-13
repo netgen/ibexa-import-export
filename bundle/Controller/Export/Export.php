@@ -166,8 +166,10 @@ final class Export extends AbstractController
                             fn () => $this->contentService->loadContentByRemoteId($content['remote_id'])->getName(),
                         );
                     } elseif ($migrationType === 'update') {
+                        $remoteId = $content['new_remote_id'] ?? $content['match']['content_remote_id'] ?? '';
+
                         $content['exported_content_name'] = $this->repository->sudo(
-                            fn () => $this->contentService->loadContentByRemoteId($content['new_remote_id'])->getName(),
+                            fn () => $this->contentService->loadContentByRemoteId($remoteId)->getName(),
                         );
                     }
                 }
