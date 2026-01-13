@@ -1,0 +1,7 @@
+services:
+  Netgen\IbexaImportExportBundle\Ibexa\Admin\MenuListener:
+    public: true
+    arguments:
+      - '@security.authorization_checker'
+    tags:
+      - { name: kernel.event_subscriber }

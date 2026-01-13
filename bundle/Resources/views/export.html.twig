@@ -1,0 +1,50 @@
+{% extends "@ibexadesign/ui/layout.html.twig" %}
+
+{% trans_default_domain 'import_export' %}
+
+{% block breadcrumbs %}
+    {% include '@ibexadesign/ui/breadcrumbs.html.twig' with { items: [
+        { value: 'breadcrumb.admin'|trans(domain='messages') },
+        { value: 'netgen.ibexa_import_export.title'|trans, url: path('netgen_import_export.route.admin.index') },
+        { value: 'netgen.ibexa_import_export.export'|trans }
+    ]} %}
+{% endblock %}
+
+{% block header %}
+    {{ include('@NetgenContentBrowser/page_head.html.twig') }}
+    {% include '@ibexadesign/ui/page_title.html.twig' with {
+        title: 'netgen.ibexa_import_export.export'|trans,
+    } %}
+{% endblock %}
+
+{% block content %}
+    <section class="container ibexa-container">
+        {% if file is not null %}
+            {% embed '@ibexadesign/ui/component/alert/alert.html.twig' with {
+                type: 'success',
+                title: 'netgen.ibexa_import_export.success.export.file_ready'|trans(domain='import_export'),
+                show_close_btn: true,
+            } %}
+                {% block actions %}
+                    <a
+                            href="{{ path('netgen_import_export.route.admin.download', {'file': file}) }}"
+                            class="btn ibexa-btn ibexa-btn--primary"
+                            id="download-link"
+                            onclick="window.onbeforeunload=null"
+                    >
+                        {{ 'netgen.ibexa_import_export.export.download_file'|trans(domain='import_export') }}
+                    </a>
+                {% endblock %}
+            {% endembed %}
+        {% endif %}
+
+        <div class="ibexa-import-export__form">
+            {{ form_start(form) }}
+            {{ form_row(form.migration_type) }}
+            {{ form_row(form.source_structure) }}
+            {{ form_row(form.source) }}
+            <input type="submit" class="btn btn-primary" value="{{ 'netgen.ibexa_import_export.export'|trans }}" />
+            {{ form_end(form) }}
+        </div>
+    </section>
+{% endblock %}

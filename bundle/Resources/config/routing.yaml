@@ -1,0 +1,24 @@
+netgen_import_export.route.admin.index:
+  path: /netgen/import-export/index
+  defaults: { _controller: Netgen\IbexaImportExportBundle\Controller\Index }
+  methods: [GET]
+
+netgen_import_export.route.admin.ajax.preview:
+  path: /ajax/netgen/import-export/preview
+  defaults: { _controller: Netgen\IbexaImportExportBundle\Controller\Ajax\Preview }
+  methods: [GET, POST]
+
+netgen_import_export.route.admin.export:
+  path: /netgen/import-export/export
+  defaults: { _controller: Netgen\IbexaImportExportBundle\Controller\Export\Export }
+  methods: [GET, POST]
+
+netgen_import_export.route.admin.download:
+  path: /netgen/import-export/export/download/{file}
+  defaults: { _controller: Netgen\IbexaImportExportBundle\Controller\Export\Download }
+  methods: [GET]
+
+netgen_import_export.route.admin.import:
+  path: /netgen/import-export/import
+  defaults: { _controller: Netgen\IbexaImportExportBundle\Controller\Import\Import }
+  methods: [GET, POST]

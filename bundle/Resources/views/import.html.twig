@@ -1,0 +1,31 @@
+{% extends "@ibexadesign/ui/layout.html.twig" %}
+
+{% trans_default_domain 'import_export' %}
+
+{% block breadcrumbs %}
+    {% include '@ibexadesign/ui/breadcrumbs.html.twig' with { items: [
+        { value: 'breadcrumb.admin'|trans(domain='messages')|desc('Admin') },
+        { value: 'netgen.ibexa_import_export.title'|trans|desc('Import/Export'), url: path('netgen_import_export.route.admin.index') },
+        { value: 'netgen.ibexa_import_export.import'|trans|desc('Import') }
+    ]} %}
+{% endblock %}
+
+{% block header %}
+    {{ include('@NetgenContentBrowser/page_head.html.twig') }}
+    {% include '@ibexadesign/ui/page_title.html.twig' with {
+        title: 'netgen.ibexa_import_export.import'|trans|desc('Import'),
+    } %}
+{% endblock %}
+
+{% block content %}
+    <div id="ibexa-import-export__preview"></div>
+    <section class="container ibexa-container ibexa-import-export-import">
+        <div class="ibexa-import-export__form" data-preview-url="{{ path('netgen_import_export.route.admin.ajax.preview') }}">
+            {{ form_start(form) }}
+            {{ form_row(form.package) }}
+            {{ form_row(form.parent_location) }}
+            <input id="ibexa-import-export__preview-button" type="submit" class="btn btn-primary" value="{{ 'netgen.ibexa_import_export.import'|trans|desc('Import') }}" />
+            {{ form_end(form) }}
+        </div>
+    </section>
+{% endblock %}

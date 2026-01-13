@@ -1,0 +1,74 @@
+{% trans_default_domain 'import_export' %}
+
+<section class="container ibexa-container ibexa-import-export__preview-container">
+
+    {# 1. Import Details: Always displayed, acts as a general summary block #}
+    <div id="ibexa-import-export__import-preview-details" class="ibexa-import-export-preview__section ibexa-import-export-preview__summary-block">
+        <h2 class="ibexa-import-export-preview__title">{{ 'netgen.ibexa_import_export.preview.import_details'|trans|desc('Import details') }}</h2>
+        <p class="ibexa-import-export-preview__detail">
+            <strong>{{ 'netgen.ibexa_import_export.preview.structure'|trans|desc('Structure') }}:</strong>
+            <span class="ibexa-import-export-preview__detail-value">{{ import_structure }}</span>
+        </p>
+        <p class="ibexa-import-export-preview__detail">
+            <strong>{{ 'netgen.ibexa_import_export.preview.type'|trans|desc('Type') }}:</strong>
+            <span class="ibexa-import-export-preview__detail-value">{{ import_mode }}</span>
+        </p>
+    </div>
+
+    {# 2. Global Error Messages: Top-level errors that prevent import (e.g., file parse failure) #}
+    {% if errors is defined and errors is not empty %}
+        <div id="ibexa-import-export__import-preview-error-messages" class="ibexa-import-export-preview__section ibexa-import-export-preview__error-block">
+            <h2 class="ibexa-import-export-preview__error-title">{{ 'netgen.ibexa_import_export.preview.global_errors'|trans|desc('Global Errors') }}</h2>
+            <ul class="ibexa-import-export-preview__error-list">
+                {% for error in errors %}
+                    <li class="ibexa-import-export-preview__error-item">{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {# 3. Skipped Content: Warnings about content items that couldn't be processed #}
+    {% if skipped_content is defined and skipped_content is not empty %}
+        <div id="ibexa-import-export__import-preview-skipped-content" class="ibexa-import-export-preview__section ibexa-import-export-preview__warning-block">
+            <h2 class="ibexa-import-export-preview__warning-title">{{ 'netgen.ibexa_import_export.preview.skipped_content'|trans|desc('Skipped content') }}</h2>
+            {% for id, item in skipped_content %}
+                <div class="ibexa-import-export-preview__skipped-item">
+                    <h3 class="ibexa-import-export-preview__skipped-id">{{ item.name }} : <code>{{ id }}</code></h3>
+                    <ul class="ibexa-import-export-preview__skipped-errors">
+                        {% for error in item.messages|default([]) %}
+                            <li class="ibexa-import-export-preview__error-message">{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {# 4. Skipped Fields: Detailed warnings about specific fields within content items #}
+    {% if skipped_content_fields is defined and skipped_content_fields is not empty %}
+        <div id="ibexa-import-export__import-preview-skipped-fields" class="ibexa-import-export-preview__section ibexa-import-export-preview__warning-block ibexa-import-export-preview__detailed-warning">
+            <h2 class="ibexa-import-export-preview__warning-title">{{ 'netgen.ibexa_import_export.preview.skipped_fields'|trans|desc('Skipped fields') }}</h2>
+            {% for id, item in skipped_content_fields %}
+                <div class="ibexa-import-export-preview__skipped-item">
+                    <h3 class="ibexa-import-export-preview__skipped-id">{{ item.name }} : <code>{{ id }}</code></h3>
+                    <ul class="ibexa-import-export-preview__field-errors">
+                        {% for error_type, error_data in item.fields|default([]) %}
+                            <li class="ibexa-import-export-preview__field-error">
+                                <strong>{{ error_type }}</strong>
+                                {% if error_data is iterable %}
+                                    <ul class="ibexa-import-export-preview__field-messages">
+                                        {% for error_message in error_data %}
+                                            <li>{{ error_message }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="ibexa-import-export-preview__field-message">{{ error_data }}</p>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
