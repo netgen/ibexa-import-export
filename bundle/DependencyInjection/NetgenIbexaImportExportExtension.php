@@ -8,12 +8,24 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Loader\DelegatingLoader;
 use Symfony\Component\Config\Loader\LoaderResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\GlobFileLoader;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
-final class NetgenIbexaImportExportExtension extends Extension
+final class NetgenIbexaImportExportExtension extends Extension implements PrependExtensionInterface
 {
+    public function prepend(ContainerBuilder $container): void
+    {
+        if (!$container->hasExtension('monolog')) {
+            return;
+        }
+
+        $container->prependExtensionConfig('monolog', [
+            'channels' => ['netgen_ibexa_import_export'],
+        ]);
+    }
+
     public function getAlias(): string
     {
         return 'netgen_ibexa_import_export';

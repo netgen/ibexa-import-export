@@ -14,7 +14,7 @@ services:
       - '%netgen_ibexa_import_export.migrations_path%'
       - '%netgen_ibexa_import_export.php_binary_path%'
       - "@translator"
-      - '@?logger'
+      - '@?monolog.logger.netgen_ibexa_import_export'
 
   Netgen\IbexaImportExportBundle\Controller\Ajax\Preview:
     public: true
@@ -43,4 +43,4 @@ services:
       - '%netgen_ibexa_import_export.migrations_path%'
       - '%netgen_ibexa_import_export.php_binary_path%'
       - "@translator"
-      - '@?logger'
+      - '@?monolog.logger.netgen_ibexa_import_export'
