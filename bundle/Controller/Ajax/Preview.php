@@ -8,6 +8,7 @@ use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\ContentTypeService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Contracts\Core\Repository\LocationService;
+use Ibexa\Contracts\Core\Repository\Repository;
 use Netgen\IbexaImportExportBundle\Registry\Registry;
 use OutOfBoundsException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -30,6 +31,7 @@ use const PATHINFO_EXTENSION;
 final class Preview extends AbstractController
 {
     public function __construct(
+        private readonly Repository $repository,
         private readonly ContentTypeService $contentTypeService,
         private readonly LocationService $locationService,
         private readonly ContentService $contentService,
@@ -68,7 +70,9 @@ final class Preview extends AbstractController
 
                 if ($importMode === 'create') {
                     try {
-                        $contentType = $this->contentTypeService->loadContentTypeByIdentifier($content['content_type']);
+                        $contentType = $this->repository->sudo(
+                            fn () => $this->contentTypeService->loadContentTypeByIdentifier($content['content_type']),
+                        );
                     } catch (NotFoundException) {
                         $skippedContent[$contentRemoteId]['name'] = $content['exported_content_name'];
                         $skippedContent[$contentRemoteId]['messages'][] = sprintf('Content type with identifier %s does not exist.', $content['content_type']);
@@ -77,7 +81,7 @@ final class Preview extends AbstractController
                     }
 
                     try {
-                        $this->contentService->loadContentByRemoteId($content['remote_id']);
+                        $this->repository->sudo(fn () => $this->contentService->loadContentByRemoteId($content['remote_id']));
                         $skippedContent[$contentRemoteId]['name'] = $content['exported_content_name'];
                         $skippedContent[$contentRemoteId]['messages'][] = sprintf('Content with remote id %s already exists.', $content['remote_id']);
 
@@ -87,7 +91,7 @@ final class Preview extends AbstractController
                     }
 
                     try {
-                        $this->locationService->loadLocationByRemoteId($content['location_remote_id']);
+                        $this->repository->sudo(fn () => $this->locationService->loadLocationByRemoteId($content['location_remote_id']));
                         $skippedContent[$contentRemoteId]['name'] = $content['exported_content_name'];
                         $skippedContent[$contentRemoteId]['messages'][] = sprintf('Content with location remote id %s already exists.', $content['location_remote_id']);
 
@@ -97,7 +101,9 @@ final class Preview extends AbstractController
                     }
                 } elseif ($importMode === 'update') {
                     try {
-                        $updateContent = $this->contentService->loadContentByRemoteId($contentRemoteId);
+                        $updateContent = $this->repository->sudo(
+                            fn () => $this->contentService->loadContentByRemoteId($contentRemoteId),
+                        );
                     } catch (NotFoundException) {
                         $skippedContent[$contentRemoteId]['name'] = $content['exported_content_name'];
                         $skippedContent[$contentRemoteId]['messages'][] = sprintf('Content with remote id %s does not exist.', $contentRemoteId);

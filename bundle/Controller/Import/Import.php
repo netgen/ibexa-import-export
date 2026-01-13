@@ -7,6 +7,7 @@ namespace Netgen\IbexaImportExportBundle\Controller\Import;
 use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Contracts\Core\Repository\LocationService;
+use Ibexa\Contracts\Core\Repository\Repository;
 use Netgen\IbexaImportExportBundle\Form\ImportType;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -28,6 +29,7 @@ use function sprintf;
 final class Import extends AbstractController
 {
     public function __construct(
+        private readonly Repository $repository,
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
         private readonly string $migrationsPath,
@@ -71,7 +73,9 @@ final class Import extends AbstractController
                 $parentLocationId = $form->get('parent_location')->getData();
 
                 try {
-                    $parentLocation = $this->locationService->loadLocation((int) $parentLocationId);
+                    $parentLocation = $this->repository->sudo(
+                        fn () => $this->locationService->loadLocation((int) $parentLocationId),
+                    );
                 } catch (NotFoundException) {
                     $this->addFlash(
                         'error',
@@ -95,8 +99,8 @@ final class Import extends AbstractController
                     $locationRemoteId = $content['location_remote_id'];
 
                     try {
-                        $this->contentService->loadContentByRemoteId($contentRemoteId);
-                        $this->locationService->loadLocationByRemoteId($locationRemoteId);
+                        $this->repository->sudo(fn () => $this->contentService->loadContentByRemoteId($contentRemoteId));
+                        $this->repository->sudo(fn () => $this->locationService->loadLocationByRemoteId($locationRemoteId));
                         unset($yamlParsed[$key]);
                     } catch (NotFoundException) {
                         // Do nothing
@@ -107,7 +111,7 @@ final class Import extends AbstractController
                     $contentRemoteId = $content['match']['content_remote_id'];
 
                     try {
-                        $this->contentService->loadContentByRemoteId($contentRemoteId);
+                        $this->repository->sudo(fn () => $this->contentService->loadContentByRemoteId($contentRemoteId));
                     } catch (NotFoundException) {
                         unset($content[$key]);
                     }

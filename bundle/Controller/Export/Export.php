@@ -7,6 +7,7 @@ namespace Netgen\IbexaImportExportBundle\Controller\Export;
 use Ibexa\Contracts\Core\Repository\ContentService;
 use Ibexa\Contracts\Core\Repository\Exceptions\NotFoundException;
 use Ibexa\Contracts\Core\Repository\LocationService;
+use Ibexa\Contracts\Core\Repository\Repository;
 use Netgen\IbexaImportExportBundle\Form\ExportType;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -29,6 +30,7 @@ use function str_replace;
 final class Export extends AbstractController
 {
     public function __construct(
+        private readonly Repository $repository,
         private readonly ContentService $contentService,
         private readonly LocationService $locationService,
         private readonly string $migrationsPath,
@@ -72,7 +74,9 @@ final class Export extends AbstractController
             $sourceStructure = $form->get('source_structure')->getData();
 
             try {
-                $content = $this->contentService->loadContent((int) $contentId);
+                $content = $this->repository->sudo(
+                    fn () => $this->contentService->loadContent((int) $contentId),
+                );
             } catch (NotFoundException) {
                 $this->addFlash(
                     'error',
@@ -153,12 +157,18 @@ final class Export extends AbstractController
 
                 foreach ($yamlParsed as &$content) {
                     if ($migrationType === 'create') {
-                        $location = $this->locationService->loadLocation($content['parent_location']);
+                        $location = $this->repository->sudo(
+                            fn () => $this->locationService->loadLocation($content['parent_location']),
+                        );
                         $locationRemoteId = $location->remoteId;
                         $content['parent_location'] = $locationRemoteId;
-                        $content['exported_content_name'] = $this->contentService->loadContentByRemoteId($content['remote_id'])->getName();
+                        $content['exported_content_name'] = $this->repository->sudo(
+                            fn () => $this->contentService->loadContentByRemoteId($content['remote_id'])->getName(),
+                        );
                     } elseif ($migrationType === 'update') {
-                        $content['exported_content_name'] = $this->contentService->loadContentByRemoteId($content['new_remote_id'])->getName();
+                        $content['exported_content_name'] = $this->repository->sudo(
+                            fn () => $this->contentService->loadContentByRemoteId($content['new_remote_id'])->getName(),
+                        );
                     }
                 }
 
