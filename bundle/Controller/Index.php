@@ -11,6 +11,8 @@ final class Index extends AbstractController
 {
     public function __invoke(): Response
     {
+        $this->denyAccessUnlessGranted('ibexa:import_export:access');
+
         return $this->render('@NetgenIbexaImportExport/index.html.twig');
     }
 }

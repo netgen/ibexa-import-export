@@ -1,0 +1,3 @@
+role.policy.import_export: 'Netgen Import/Export'
+role.policy.import_export.all_functions: 'All functions'
+role.policy.import_export.access: 'Access Import/Export module'

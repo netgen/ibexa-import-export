@@ -38,6 +38,8 @@ final class Preview extends AbstractController
 
     public function __invoke(Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ibexa:import_export:access');
+
         /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
         $file = $request->files->get('file');
         $originalFilename = $file->getClientOriginalName();

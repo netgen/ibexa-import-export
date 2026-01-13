@@ -18,6 +18,8 @@ final class Download extends AbstractController
 
     public function __invoke(Request $request, string $file): Response
     {
+        $this->denyAccessUnlessGranted('ibexa:import_export:access');
+
         $projectRoot = $this->container->getParameter('kernel.project_dir');
         $filePath = $projectRoot . '/' . $this->migrationsPath . '/' . $file;
         $response = new BinaryFileResponse($filePath);

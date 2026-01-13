@@ -39,6 +39,8 @@ final class Export extends AbstractController
 
     public function __invoke(Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ibexa:import_export:access');
+
         $phpPath = $this->phpBinaryPath;
 
         if ($phpPath === null || $phpPath === '') {

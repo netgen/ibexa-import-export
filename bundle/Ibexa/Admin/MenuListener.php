@@ -7,9 +7,12 @@ namespace Netgen\IbexaImportExportBundle\Ibexa\Admin;
 use Ibexa\AdminUi\Menu\Event\ConfigureMenuEvent;
 use Ibexa\AdminUi\Menu\MainMenuBuilder;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 final class MenuListener implements EventSubscriberInterface
 {
+    public function __construct(private readonly AuthorizationCheckerInterface $authorizationChecker) {}
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -19,6 +22,10 @@ final class MenuListener implements EventSubscriberInterface
 
     public function onMenuConfigure(ConfigureMenuEvent $event): void
     {
+        if (!$this->authorizationChecker->isGranted('ibexa:import_export:access')) {
+            return;
+        }
+
         $menu = $event->getMenu();
 
         if (!isset($menu[MainMenuBuilder::ITEM_ADMIN])) {
