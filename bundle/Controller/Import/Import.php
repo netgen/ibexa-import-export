@@ -113,7 +113,7 @@ final class Import extends AbstractController
                     try {
                         $this->repository->sudo(fn () => $this->contentService->loadContentByRemoteId($contentRemoteId));
                     } catch (NotFoundException) {
-                        unset($content[$key]);
+                        unset($yamlParsed[$key]);
                     }
                 }
             }
