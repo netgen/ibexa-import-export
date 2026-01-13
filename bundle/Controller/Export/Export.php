@@ -29,19 +29,19 @@ use function str_replace;
 final class Export extends AbstractController
 {
     public function __construct(
-        private readonly ContentService      $contentService,
-        private readonly LocationService     $locationService,
-        private readonly string              $migrationsPath,
-        private readonly ?string             $phpBinaryPath,
+        private readonly ContentService $contentService,
+        private readonly LocationService $locationService,
+        private readonly string $migrationsPath,
+        private readonly ?string $phpBinaryPath,
         private readonly TranslatorInterface $translator,
-        private readonly LoggerInterface     $logger = new NullLogger(),
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {}
 
     public function __invoke(Request $request): Response
     {
         $phpPath = $this->phpBinaryPath;
 
-        if ($phpPath === null || $phpPath == '') {
+        if ($phpPath === null || $phpPath === '') {
             $phpFinder = new PhpExecutableFinder();
             $phpPath = $phpFinder->find();
         }
@@ -133,10 +133,15 @@ final class Export extends AbstractController
                 );
 
                 $this->logger->error($error);
+                $this->logger->error($process->getErrorOutput());
 
                 $this->addFlash(
                     'error',
-                    $error,
+                    $this->translator->trans(
+                        'netgen.ibexa_import_export.error.export',
+                        [],
+                        'import_export',
+                    ),
                 );
             } else {
                 $fileName = str_replace("\n", '', basename($process->getOutput()));
@@ -150,7 +155,7 @@ final class Export extends AbstractController
                         $locationRemoteId = $location->remoteId;
                         $content['parent_location'] = $locationRemoteId;
                         $content['exported_content_name'] = $this->contentService->loadContentByRemoteId($content['remote_id'])->getName();
-                    }elseif ($migrationType === 'update'){
+                    } elseif ($migrationType === 'update') {
                         $content['exported_content_name'] = $this->contentService->loadContentByRemoteId($content['new_remote_id'])->getName();
                     }
                 }
@@ -166,6 +171,8 @@ final class Export extends AbstractController
                         'import_export',
                     ),
                 );
+
+                $this->logger->info('Export successful: ' . $process->getOutput());
             }
         }
 

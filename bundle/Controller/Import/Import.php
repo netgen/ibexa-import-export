@@ -28,12 +28,12 @@ use function sprintf;
 final class Import extends AbstractController
 {
     public function __construct(
-        private readonly ContentService      $contentService,
-        private readonly LocationService     $locationService,
-        private readonly string              $migrationsPath,
-        private readonly ?string             $phpBinaryPath,
+        private readonly ContentService $contentService,
+        private readonly LocationService $locationService,
+        private readonly string $migrationsPath,
+        private readonly ?string $phpBinaryPath,
         private readonly TranslatorInterface $translator,
-        private readonly LoggerInterface     $logger = new NullLogger(),
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {}
 
     public function __invoke(Request $request): Response
@@ -142,6 +142,7 @@ final class Import extends AbstractController
                 );
 
                 $this->logger->error($error);
+                $this->logger->error($process->getErrorOutput());
 
                 $this->addFlash(
                     'error',
@@ -161,6 +162,8 @@ final class Import extends AbstractController
                     'import_export',
                 ),
             );
+
+            $this->logger->info('Import successful: ' . $process->getOutput());
 
             return $this->redirectToRoute('netgen_import_export.route.admin.import');
         }
