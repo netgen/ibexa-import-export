@@ -9,6 +9,7 @@ services:
     calls:
         - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
     arguments:
+      - '@ibexa.api.repository'
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
       - '%netgen_ibexa_import_export.migrations_path%'
@@ -21,6 +22,7 @@ services:
     calls:
         - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
     arguments:
+      - '@ibexa.api.repository'
       - "@ibexa.api.service.content_type"
       - "@ibexa.api.service.location"
       - "@ibexa.api.service.content"
@@ -38,6 +40,7 @@ services:
     calls:
         - [ setContainer, [ '@Psr\Container\ContainerInterface' ] ]
     arguments:
+      - '@ibexa.api.repository'
       - "@ibexa.api.service.content"
       - "@ibexa.api.service.location"
       - '%netgen_ibexa_import_export.migrations_path%'
