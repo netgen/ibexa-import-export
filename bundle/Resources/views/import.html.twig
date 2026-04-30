@@ -23,7 +23,12 @@
         <div class="ibexa-import-export__form" data-preview-url="{{ path('netgen_import_export.route.admin.ajax.preview') }}">
             {{ form_start(form) }}
             {{ form_row(form.package) }}
-            {{ form_row(form.parent_location) }}
+            <div class="ibexa-import-export__field-parent-location">
+                {{ form_row(form.parent_location) }}
+            </div>
+            <p class="ibexa-import-export__submit-hint" hidden>
+                Choose an import location to enable the import.
+            </p>
             <input id="ibexa-import-export__preview-button" type="submit" class="btn btn-primary" value="{{ 'netgen.ibexa_import_export.import'|trans|desc('Import') }}" />
             {{ form_end(form) }}
         </div>

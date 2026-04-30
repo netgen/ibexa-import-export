@@ -32,7 +32,9 @@ final class ImportType extends AbstractType
                 ContentBrowserType::class,
                 [
                     'item_type' => 'ibexa_location',
-                    'required' => true,
+                    // Required only for create-mode imports — update mode does not use this field.
+                    // The controller validates presence at runtime when needed.
+                    'required' => false,
                     'label' => 'netgen.ibexa_import_export.form.import.parent_location',
                 ],
             );

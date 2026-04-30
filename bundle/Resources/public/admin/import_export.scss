@@ -139,6 +139,42 @@
   flex: 1 1 auto;
 }
 
+/**
+ * --- Disabled state for the parent_location field on Import ---
+ * Applied by JS when the uploaded YAML is detected to be in update mode
+ * (parent_location is unused in that mode).
+ */
+.ibexa-import-export__field-parent-location--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.ibexa-import-export__field-parent-location--disabled::after {
+  content: "(not used in update mode)";
+  display: block;
+  margin-top: 0.5rem;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/**
+ * --- Hint shown above the import submit button when a location is required but missing ---
+ */
+.ibexa-import-export__submit-hint {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  background-color: #fff3cd;
+  border-left: 3px solid #f59e0b;
+  border-radius: 0.25rem;
+  color: #856404;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
 /* OVERRIDE: Set Import Button to Red/Danger color */
 .ibexa-import-export-import .ibexa-import-export__form input[type="submit"] {
   background-color: #dc3545 !important;
