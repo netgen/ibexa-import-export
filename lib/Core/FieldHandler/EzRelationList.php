@@ -11,6 +11,7 @@ use Kaliop\eZMigrationBundle\API\FieldValueConverterInterface;
 use Kaliop\eZMigrationBundle\Core\FieldHandler\AbstractFieldHandler;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+use function array_values;
 use function count;
 
 final class EzRelationList extends AbstractFieldHandler implements FieldValueConverterInterface
@@ -37,11 +38,13 @@ final class EzRelationList extends AbstractFieldHandler implements FieldValueCon
                 $relatedContent = $this->contentService->loadContentByRemoteId($remoteId);
                 $ids[$key] = $relatedContent->id;
             } catch (NotFoundException) {
-                continue;
+                // Drop missing references entirely; otherwise the original remote-id string
+                // would leak into the value alongside resolved integer ids.
+                unset($ids[$key]);
             }
         }
 
-        return new RelationListValue($ids);
+        return new RelationListValue(array_values($ids));
     }
 
     public function fieldValueToHash($fieldValue, array $context = []): array

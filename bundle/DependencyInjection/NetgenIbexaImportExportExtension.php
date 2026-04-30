@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Netgen\IbexaImportExportBundle\DependencyInjection;
 
+use Netgen\IbexaImportExport\Core\Executor\ContentManagerWithTranslations;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Loader\DelegatingLoader;
 use Symfony\Component\Config\Loader\LoaderResolver;
@@ -51,6 +52,11 @@ final class NetgenIbexaImportExportExtension extends Extension implements Prepen
 
         $loader->load('services/*.yaml', 'glob');
         $loader->load('default_settings.yaml');
+
+        $container->setParameter(
+            'ez_migration_bundle.executor.content_manager.class',
+            ContentManagerWithTranslations::class,
+        );
 
         $this->processExtensionConfiguration($configs, $container);
     }

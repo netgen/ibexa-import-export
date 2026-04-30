@@ -100,6 +100,81 @@
   color: white !important;
 }
 
+/**
+ * --- Generated export files list (shown above the form after a successful export) ---
+ * Uses its own block instead of cramming buttons into the alert's actions slot,
+ * which would squeeze the alert title and break layout for many files.
+ */
+.ibexa-import-export__files-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ibexa-import-export__files-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.375rem;
+
+  .ibexa-btn {
+    flex: 0 0 auto;
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+  }
+}
+
+.ibexa-import-export__files-list-name {
+  font-family: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
+  font-size: 0.9rem;
+  color: #333;
+  word-break: break-all;
+  flex: 1 1 auto;
+}
+
+/**
+ * --- Disabled state for the parent_location field on Import ---
+ * Applied by JS when the uploaded YAML is detected to be in update mode
+ * (parent_location is unused in that mode).
+ */
+.ibexa-import-export__field-parent-location--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.ibexa-import-export__field-parent-location--disabled::after {
+  content: "(not used in update mode)";
+  display: block;
+  margin-top: 0.5rem;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/**
+ * --- Hint shown above the import submit button when a location is required but missing ---
+ */
+.ibexa-import-export__submit-hint {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  background-color: #fff3cd;
+  border-left: 3px solid #f59e0b;
+  border-radius: 0.25rem;
+  color: #856404;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
 /* OVERRIDE: Set Import Button to Red/Danger color */
 .ibexa-import-export-import .ibexa-import-export__form input[type="submit"] {
   background-color: #dc3545 !important;
@@ -108,9 +183,17 @@
   filter: none;
 }
 
-.ibexa-import-export-import .ibexa-import-export__form input[type="submit"]:hover {
+.ibexa-import-export-import .ibexa-import-export__form input[type="submit"]:hover:not([disabled]) {
   background-color: #c82333 !important; /* Slightly darker red on hover */
   border-color: #bd2130 !important;
+}
+
+/* Disabled import button — clearly grey instead of muted-red so the user notices */
+.ibexa-import-export-import .ibexa-import-export__form input[type="submit"][disabled] {
+  background-color: #adb5bd !important;
+  border-color: #adb5bd !important;
+  cursor: not-allowed;
+  opacity: 1 !important; /* override the inline 0.5 from JS — colour change conveys disabled clearly */
 }
 
 

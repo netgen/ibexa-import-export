@@ -14,6 +14,7 @@ use OutOfBoundsException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 use function array_key_exists;
@@ -42,21 +43,49 @@ final class Preview extends AbstractController
     {
         $this->denyAccessUnlessGranted('ibexa:import_export:access');
 
-        /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
+        /** @var \Symfony\Component\HttpFoundation\File\UploadedFile|null $file */
         $file = $request->files->get('file');
-        $originalFilename = $file->getClientOriginalName();
         $errors = [];
         $skippedContent = [];
         $skippedContentFields = [];
 
-        $fileExtension = pathinfo($originalFilename, PATHINFO_EXTENSION);
+        if ($file === null) {
+            return new Response(
+                $this->render('@NetgenIbexaImportExport/preview.html.twig', [
+                    'import_structure' => null,
+                    'import_mode' => null,
+                    'errors' => ['No file uploaded.'],
+                    'skipped_content' => $skippedContent,
+                    'skipped_content_fields' => $skippedContentFields,
+                ])->getContent(),
+                Response::HTTP_BAD_REQUEST,
+            );
+        }
 
+        $originalFilename = $file->getClientOriginalName();
+        $fileExtension = pathinfo($originalFilename, PATHINFO_EXTENSION);
         $isYaml = in_array(mb_strtolower($fileExtension), ['yml', 'yaml'], true);
 
         if ($isYaml === false) {
             $errors[] = 'Uploaded file is not a valid yaml file!';
         } else {
-            $yamlParsed = Yaml::parseFile($file->getRealPath());
+            try {
+                $yamlParsed = Yaml::parseFile($file->getRealPath());
+            } catch (ParseException) {
+                $yamlParsed = null;
+            }
+
+            if (!is_array($yamlParsed) || $yamlParsed === [] || !isset($yamlParsed[0]['mode'])) {
+                $response = $this->render('@NetgenIbexaImportExport/preview.html.twig', [
+                    'import_structure' => null,
+                    'import_mode' => null,
+                    'errors' => ['The uploaded file is not a valid migration YAML.'],
+                    'skipped_content' => $skippedContent,
+                    'skipped_content_fields' => $skippedContentFields,
+                ]);
+
+                return new Response($response->getContent(), Response::HTTP_BAD_REQUEST);
+            }
 
             if (count($yamlParsed) > 1) {
                 $importStructure = 'Subtree';
@@ -64,39 +93,6 @@ final class Preview extends AbstractController
                 $importStructure = 'Singular content';
             }
             $importMode = $yamlParsed[0]['mode'];
-
-            if ($importMode === 'create' && $importStructure === 'Subtree') {
-                $rootRemoteId = $yamlParsed[0]['remote_id'] ?? null;
-                $rootName = $yamlParsed[0]['exported_content_name'] ?? null;
-
-                if (is_string($rootRemoteId) && $rootRemoteId !== '') {
-                    try {
-                        $this->repository->sudo(
-                            fn () => $this->contentService->loadContentByRemoteId($rootRemoteId),
-                        );
-
-                        $errors[] = sprintf(
-                            'Subtree import cannot be executed because the root content %s(remote id: %s) already exists.',
-                            $rootName,
-                            $rootRemoteId,
-                        );
-                    } catch (NotFoundException) {
-                        // Do nothing
-                    }
-                }
-            }
-
-            if (count($errors) > 0) {
-                $response = $this->render('@NetgenIbexaImportExport/preview.html.twig', [
-                    'import_structure' => $importStructure,
-                    'import_mode' => $importMode,
-                    'errors' => $errors,
-                    'skipped_content' => $skippedContent,
-                    'skipped_content_fields' => $skippedContentFields,
-                ]);
-
-                return new Response($response->getContent(), Response::HTTP_BAD_REQUEST);
-            }
 
             foreach ($yamlParsed as $content) {
                 $contentRemoteId = $importMode === 'update' ? $content['match']['content_remote_id'] : $content['remote_id'];
@@ -152,6 +148,7 @@ final class Preview extends AbstractController
                     || $importMode === 'update' && !array_key_exists($contentRemoteId, $skippedContent)
                 ) {
                     $attributes = $content['attributes'];
+                    $isMultiLanguage = !array_key_exists('lang', $content);
                     foreach ($attributes as $field => $value) {
                         $fieldTypeIdentifier = $contentType->getFieldDefinition($field)->fieldTypeIdentifier;
 
@@ -165,14 +162,29 @@ final class Preview extends AbstractController
                             continue;
                         }
 
-                        $skipsField = $fieldHandler->skipsField($value);
-                        if (is_string($skipsField)) {
-                            $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skipsField;
-                            $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
-                        } elseif (is_array($skipsField) && count($skipsField) > 0) {
-                            foreach ($skipsField as $skippedField) {
-                                $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skippedField;
+                        if ($isMultiLanguage && is_array($value)) {
+                            foreach ($value as $langCode => $langValue) {
+                                $skipsField = $fieldHandler->skipsField($langValue);
+                                if (is_string($skipsField)) {
+                                    $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skipsField . ' (' . $langCode . ')';
+                                    $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
+                                } elseif (is_array($skipsField) && count($skipsField) > 0) {
+                                    foreach ($skipsField as $skippedField) {
+                                        $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skippedField . ' (' . $langCode . ')';
+                                        $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
+                                    }
+                                }
+                            }
+                        } else {
+                            $skipsField = $fieldHandler->skipsField($value);
+                            if (is_string($skipsField)) {
+                                $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skipsField;
                                 $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
+                            } elseif (is_array($skipsField) && count($skipsField) > 0) {
+                                foreach ($skipsField as $skippedField) {
+                                    $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skippedField;
+                                    $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
+                                }
                             }
                         }
                     }

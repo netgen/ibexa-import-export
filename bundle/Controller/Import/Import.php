@@ -17,14 +17,20 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+use function array_values;
 use function date;
 use function file_put_contents;
+use function is_array;
 use function is_dir;
 use function mkdir;
+use function preg_match;
+use function preg_replace;
 use function sprintf;
+use function uniqid;
 
 final class Import extends AbstractController
 {
@@ -66,7 +72,41 @@ final class Import extends AbstractController
             /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $uploadedFile */
             $uploadedFile = $form->get('package')->getData();
 
-            $yamlParsed = Yaml::parseFile($uploadedFile->getRealPath());
+            try {
+                $yamlParsed = Yaml::parseFile($uploadedFile->getRealPath());
+            } catch (ParseException $e) {
+                $this->logger->error('Import YAML parse error: ' . $e->getMessage());
+                $this->addFlash(
+                    'error',
+                    $this->translator->trans(
+                        'netgen.ibexa_import_export.error.import.invalid_file',
+                        [],
+                        'import_export',
+                    ),
+                );
+
+                return $this->render(
+                    '@NetgenIbexaImportExport/import.html.twig',
+                    ['form' => $form->createView()],
+                );
+            }
+
+            if (!is_array($yamlParsed) || $yamlParsed === [] || !isset($yamlParsed[0]['mode'])) {
+                $this->addFlash(
+                    'error',
+                    $this->translator->trans(
+                        'netgen.ibexa_import_export.error.import.invalid_file',
+                        [],
+                        'import_export',
+                    ),
+                );
+
+                return $this->render(
+                    '@NetgenIbexaImportExport/import.html.twig',
+                    ['form' => $form->createView()],
+                );
+            }
+
             $importMode = $yamlParsed[0]['mode'];
 
             if ($importMode === 'create') {
@@ -93,10 +133,18 @@ final class Import extends AbstractController
                         ],
                     );
                 }
+                // Rewrite the root entry's parent_location BEFORE the skip-existing loop runs.
+                // After array_values reindex below, $yamlParsed[0] may no longer be the original
+                // root (if it gets unset because it already exists), so this rewrite must target
+                // the export's root entry while it still sits at index 0.
                 $yamlParsed[0]['parent_location'] = $parentLocation->remoteId;
                 foreach ($yamlParsed as $key => $content) {
-                    $contentRemoteId = $content['remote_id'];
-                    $locationRemoteId = $content['location_remote_id'];
+                    $contentRemoteId = $content['remote_id'] ?? null;
+                    $locationRemoteId = $content['location_remote_id'] ?? null;
+
+                    if ($contentRemoteId === null || $locationRemoteId === null) {
+                        continue;
+                    }
 
                     try {
                         $this->repository->sudo(fn () => $this->contentService->loadContentByRemoteId($contentRemoteId));
@@ -106,9 +154,16 @@ final class Import extends AbstractController
                         // Do nothing
                     }
                 }
+                // Reindex so the dumped YAML is a sequence (kaliop expects a list of steps,
+                // not an associative map keyed by surviving indexes).
+                $yamlParsed = array_values($yamlParsed);
             } else {
                 foreach ($yamlParsed as $key => $content) {
-                    $contentRemoteId = $content['match']['content_remote_id'];
+                    $contentRemoteId = $content['match']['content_remote_id'] ?? null;
+
+                    if ($contentRemoteId === null) {
+                        continue;
+                    }
 
                     try {
                         $this->repository->sudo(fn () => $this->contentService->loadContentByRemoteId($contentRemoteId));
@@ -116,13 +171,17 @@ final class Import extends AbstractController
                         unset($yamlParsed[$key]);
                     }
                 }
+                $yamlParsed = array_values($yamlParsed);
             }
 
             $yaml = Yaml::dump($yamlParsed);
 
             $projectRoot = $this->container->getParameter('kernel.project_dir');
             $randomTimeComponent = date('YmdHis');
-            $newFilePath = $projectRoot . '/' . $this->migrationsPath . '/' . $randomTimeComponent . $uploadedFile->getClientOriginalName();
+            // Server-generate the filename: never trust getClientOriginalName(), which a malicious
+            // upload could craft to traverse out of the migrations directory.
+            $safeOriginalName = preg_replace('/[^A-Za-z0-9._-]/', '_', $uploadedFile->getClientOriginalName());
+            $newFilePath = $projectRoot . '/' . $this->migrationsPath . '/' . $randomTimeComponent . '_' . uniqid() . '_' . $safeOriginalName;
 
             file_put_contents($newFilePath, $yaml);
 
@@ -138,7 +197,11 @@ final class Import extends AbstractController
             $process->setInput($additionalAnswers);
             $process->run();
 
-            if (!$process->isSuccessful()) {
+            $output = $process->getOutput();
+            $hasFailedMigrations = preg_match('/failed\s+([1-9]\d*)/i', $output) === 1;
+            $importFailed = !$process->isSuccessful() || $hasFailedMigrations;
+
+            if ($importFailed) {
                 $error = sprintf(
                     'The command "%s" failed. Exit Code: %s(%s) Working directory: %s',
                     $process->getCommandLine(),
@@ -149,6 +212,7 @@ final class Import extends AbstractController
 
                 $this->logger->error($error);
                 $this->logger->error($process->getErrorOutput());
+                $this->logger->error($output);
 
                 $this->addFlash(
                     'error',
@@ -158,18 +222,18 @@ final class Import extends AbstractController
                         'import_export',
                     ),
                 );
+            } else {
+                $this->addFlash(
+                    'success',
+                    $this->translator->trans(
+                        'netgen.ibexa_import_export.success.import',
+                        [],
+                        'import_export',
+                    ),
+                );
+
+                $this->logger->info('Import successful: ' . $output);
             }
-
-            $this->addFlash(
-                'success',
-                $this->translator->trans(
-                    'netgen.ibexa_import_export.success.import',
-                    [],
-                    'import_export',
-                ),
-            );
-
-            $this->logger->info('Import successful: ' . $process->getOutput());
 
             return $this->redirectToRoute('netgen_import_export.route.admin.import');
         }

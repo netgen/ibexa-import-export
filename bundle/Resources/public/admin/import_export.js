@@ -13,7 +13,85 @@
         var previewDiv = doc.querySelector('#ibexa-import-export__preview');
         var previewButton = doc.querySelector('#ibexa-import-export__preview-button');
         var formContainer = doc.querySelector('.ibexa-import-export__form');
+        var parentLocationField = doc.querySelector('.ibexa-import-export__field-parent-location');
+        var submitHint = doc.querySelector('.ibexa-import-export__submit-hint');
         var previewUrl = formContainer.dataset.previewUrl;
+
+        // Tracks the latest preview state. Updated on every preview response.
+        var previewSucceeded = false;
+
+        function getImportMode() {
+            var previewSection = previewDiv.querySelector('[data-import-mode]');
+            return previewSection ? previewSection.dataset.importMode : '';
+        }
+
+        // The content browser's single widget renders two hidden inputs:
+        //   .js-item-type — carries the item-type config (e.g. "ibexa_location"), NOT the picked value
+        //   .js-value     — carries the actually picked location value (or empty when nothing is selected)
+        // Always target .js-value to read the real selection.
+        function getParentLocationValue() {
+            if (!parentLocationField) {
+                return '';
+            }
+            var valueInput = parentLocationField.querySelector('.js-value');
+            return valueInput ? (valueInput.value || '') : '';
+        }
+
+        function applyImportModeToForm() {
+            if (!parentLocationField) {
+                return;
+            }
+
+            var importMode = getImportMode();
+            var valueInput = parentLocationField.querySelector('.js-value');
+
+            // parent_location is irrelevant for update-mode imports; grey it out.
+            if (importMode === 'update') {
+                parentLocationField.classList.add('ibexa-import-export__field-parent-location--disabled');
+                if (valueInput) {
+                    valueInput.disabled = true;
+                }
+            } else {
+                parentLocationField.classList.remove('ibexa-import-export__field-parent-location--disabled');
+                if (valueInput) {
+                    valueInput.disabled = false;
+                }
+            }
+        }
+
+        function refreshSubmitState() {
+            if (!previewButton) {
+                return;
+            }
+
+            var importMode = getImportMode();
+            // Block submit only when create-mode and no destination has been chosen yet.
+            // For update-mode, parent_location is unused so it doesn't gate submit.
+            var needsLocation = importMode === 'create' && getParentLocationValue() === '';
+            var canSubmit = previewSucceeded && !needsLocation;
+
+            previewButton.disabled = !canSubmit;
+            previewButton.style.opacity = canSubmit ? 1 : 0.5;
+            previewButton.title = needsLocation
+                ? 'Choose an import location to enable the import.'
+                : '';
+
+            if (submitHint) {
+                submitHint.hidden = !needsLocation;
+            }
+        }
+
+        // Watch the parent_location wrapper for any DOM/value change made by the content browser
+        // (it doesn't reliably fire native input/change events). Each mutation triggers a refresh.
+        if (parentLocationField && typeof MutationObserver !== 'undefined') {
+            var observer = new MutationObserver(refreshSubmitState);
+            observer.observe(parentLocationField, {
+                subtree: true,
+                childList: true,
+                attributes: true,
+                characterData: true,
+            });
+        }
 
         if (packageInput) {
             packageInput.addEventListener('change', function() {
@@ -25,20 +103,19 @@
                 xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === XMLHttpRequest.DONE) {
-                        if (xhr.status === 200) {
-                            previewDiv.innerHTML = xhr.responseText;
-                            previewButton.disabled = false;
-                            previewButton.style.opacity = 1;
-                        } else {
-                            previewDiv.innerHTML = xhr.responseText;
-                            previewButton.disabled = true;
-                            previewButton.style.opacity = 0.5;
-                        }
+                        previewDiv.innerHTML = xhr.responseText;
+                        previewSucceeded = xhr.status === 200;
+
+                        applyImportModeToForm();
+                        refreshSubmitState();
                     }
                 };
                 xhr.send(formData);
             });
         }
+
+        // Initial state: no preview yet, so submit is disabled.
+        refreshSubmitState();
     });
 
 })(window, window.document, window.ibexa, window.React, window.ReactDOM);

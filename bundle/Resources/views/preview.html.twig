@@ -1,6 +1,9 @@
 {% trans_default_domain 'import_export' %}
 
-<section class="container ibexa-container ibexa-import-export__preview-container">
+<section
+    class="container ibexa-container ibexa-import-export__preview-container"
+    data-import-mode="{{ import_mode|default('') }}"
+>
 
     {# 1. Import Details: Always displayed, acts as a general summary block #}
     <div id="ibexa-import-export__import-preview-details" class="ibexa-import-export-preview__section ibexa-import-export-preview__summary-block">
