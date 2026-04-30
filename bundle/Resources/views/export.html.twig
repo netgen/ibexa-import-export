@@ -20,23 +20,26 @@
 {% block content %}
     <section class="container ibexa-container">
         {% if files is defined and files|length > 0 %}
-            {% embed '@ibexadesign/ui/component/alert/alert.html.twig' with {
+            {% include '@ibexadesign/ui/component/alert/alert.html.twig' with {
                 type: 'success',
                 title: 'netgen.ibexa_import_export.success.export.file_ready'|trans(domain='import_export'),
                 show_close_btn: true,
             } %}
-                {% block actions %}
-                    {% for file in files %}
+
+            <ul class="ibexa-import-export__files-list">
+                {% for file in files %}
+                    <li class="ibexa-import-export__files-list-item">
                         <a
-                                href="{{ path('netgen_import_export.route.admin.download', {'file': file}) }}"
-                                class="btn ibexa-btn ibexa-btn--primary"
-                                onclick="window.onbeforeunload=null"
+                            href="{{ path('netgen_import_export.route.admin.download', {'file': file}) }}"
+                            class="btn ibexa-btn ibexa-btn--primary ibexa-btn--small"
+                            onclick="window.onbeforeunload=null"
                         >
-                            {{ 'netgen.ibexa_import_export.export.download_file'|trans(domain='import_export') }}: {{ file }}
+                            {{ 'netgen.ibexa_import_export.export.download_file'|trans(domain='import_export') }}
                         </a>
-                    {% endfor %}
-                {% endblock %}
-            {% endembed %}
+                        <span class="ibexa-import-export__files-list-name">{{ file }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
         {% endif %}
 
         <div class="ibexa-import-export__form">
