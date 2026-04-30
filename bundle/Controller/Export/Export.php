@@ -21,11 +21,13 @@ use Symfony\Component\Yaml\Yaml;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 use function array_filter;
+use function array_map;
 use function array_unique;
 use function array_values;
 use function basename;
 use function count;
 use function file_put_contents;
+use function is_array;
 use function is_dir;
 use function mkdir;
 use function sprintf;
@@ -218,6 +220,18 @@ final class Export extends AbstractController
                 );
                 $locationRemoteId = $location->remoteId;
                 $content['parent_location'] = $locationRemoteId;
+
+                // The kaliop generator stores other_parent_locations as numeric ids; convert each to remote id
+                // so the migration is portable across environments.
+                if (isset($content['other_parent_locations']) && is_array($content['other_parent_locations'])) {
+                    $content['other_parent_locations'] = array_map(
+                        fn ($otherLocationId) => $this->repository->sudo(
+                            fn () => $this->locationService->loadLocation((int) $otherLocationId)->remoteId,
+                        ),
+                        $content['other_parent_locations'],
+                    );
+                }
+
                 $content['exported_content_name'] = $this->repository->sudo(
                     fn () => $this->contentService->loadContentByRemoteId($content['remote_id'])->getName(),
                 );

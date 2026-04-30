@@ -14,6 +14,7 @@ use OutOfBoundsException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 use function array_key_exists;
@@ -42,21 +43,49 @@ final class Preview extends AbstractController
     {
         $this->denyAccessUnlessGranted('ibexa:import_export:access');
 
-        /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
+        /** @var \Symfony\Component\HttpFoundation\File\UploadedFile|null $file */
         $file = $request->files->get('file');
-        $originalFilename = $file->getClientOriginalName();
         $errors = [];
         $skippedContent = [];
         $skippedContentFields = [];
 
-        $fileExtension = pathinfo($originalFilename, PATHINFO_EXTENSION);
+        if ($file === null) {
+            return new Response(
+                $this->render('@NetgenIbexaImportExport/preview.html.twig', [
+                    'import_structure' => null,
+                    'import_mode' => null,
+                    'errors' => ['No file uploaded.'],
+                    'skipped_content' => $skippedContent,
+                    'skipped_content_fields' => $skippedContentFields,
+                ])->getContent(),
+                Response::HTTP_BAD_REQUEST,
+            );
+        }
 
+        $originalFilename = $file->getClientOriginalName();
+        $fileExtension = pathinfo($originalFilename, PATHINFO_EXTENSION);
         $isYaml = in_array(mb_strtolower($fileExtension), ['yml', 'yaml'], true);
 
         if ($isYaml === false) {
             $errors[] = 'Uploaded file is not a valid yaml file!';
         } else {
-            $yamlParsed = Yaml::parseFile($file->getRealPath());
+            try {
+                $yamlParsed = Yaml::parseFile($file->getRealPath());
+            } catch (ParseException) {
+                $yamlParsed = null;
+            }
+
+            if (!is_array($yamlParsed) || $yamlParsed === [] || !isset($yamlParsed[0]['mode'])) {
+                $response = $this->render('@NetgenIbexaImportExport/preview.html.twig', [
+                    'import_structure' => null,
+                    'import_mode' => null,
+                    'errors' => ['The uploaded file is not a valid migration YAML.'],
+                    'skipped_content' => $skippedContent,
+                    'skipped_content_fields' => $skippedContentFields,
+                ]);
+
+                return new Response($response->getContent(), Response::HTTP_BAD_REQUEST);
+            }
 
             if (count($yamlParsed) > 1) {
                 $importStructure = 'Subtree';
