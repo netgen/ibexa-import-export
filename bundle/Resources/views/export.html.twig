@@ -19,21 +19,22 @@
 
 {% block content %}
     <section class="container ibexa-container">
-        {% if file is not null %}
+        {% if files is defined and files|length > 0 %}
             {% embed '@ibexadesign/ui/component/alert/alert.html.twig' with {
                 type: 'success',
                 title: 'netgen.ibexa_import_export.success.export.file_ready'|trans(domain='import_export'),
                 show_close_btn: true,
             } %}
                 {% block actions %}
-                    <a
-                            href="{{ path('netgen_import_export.route.admin.download', {'file': file}) }}"
-                            class="btn ibexa-btn ibexa-btn--primary"
-                            id="download-link"
-                            onclick="window.onbeforeunload=null"
-                    >
-                        {{ 'netgen.ibexa_import_export.export.download_file'|trans(domain='import_export') }}
-                    </a>
+                    {% for file in files %}
+                        <a
+                                href="{{ path('netgen_import_export.route.admin.download', {'file': file}) }}"
+                                class="btn ibexa-btn ibexa-btn--primary"
+                                onclick="window.onbeforeunload=null"
+                        >
+                            {{ 'netgen.ibexa_import_export.export.download_file'|trans(domain='import_export') }}: {{ file }}
+                        </a>
+                    {% endfor %}
                 {% endblock %}
             {% endembed %}
         {% endif %}
