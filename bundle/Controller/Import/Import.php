@@ -24,6 +24,7 @@ use function date;
 use function file_put_contents;
 use function is_dir;
 use function mkdir;
+use function preg_match;
 use function sprintf;
 
 final class Import extends AbstractController
@@ -138,7 +139,11 @@ final class Import extends AbstractController
             $process->setInput($additionalAnswers);
             $process->run();
 
-            if (!$process->isSuccessful()) {
+            $output = $process->getOutput();
+            $hasFailedMigrations = preg_match('/failed\s+([1-9]\d*)/i', $output) === 1;
+            $importFailed = !$process->isSuccessful() || $hasFailedMigrations;
+
+            if ($importFailed) {
                 $error = sprintf(
                     'The command "%s" failed. Exit Code: %s(%s) Working directory: %s',
                     $process->getCommandLine(),
@@ -149,6 +154,7 @@ final class Import extends AbstractController
 
                 $this->logger->error($error);
                 $this->logger->error($process->getErrorOutput());
+                $this->logger->error($output);
 
                 $this->addFlash(
                     'error',
@@ -158,18 +164,18 @@ final class Import extends AbstractController
                         'import_export',
                     ),
                 );
+            } else {
+                $this->addFlash(
+                    'success',
+                    $this->translator->trans(
+                        'netgen.ibexa_import_export.success.import',
+                        [],
+                        'import_export',
+                    ),
+                );
+
+                $this->logger->info('Import successful: ' . $output);
             }
-
-            $this->addFlash(
-                'success',
-                $this->translator->trans(
-                    'netgen.ibexa_import_export.success.import',
-                    [],
-                    'import_export',
-                ),
-            );
-
-            $this->logger->info('Import successful: ' . $process->getOutput());
 
             return $this->redirectToRoute('netgen_import_export.route.admin.import');
         }

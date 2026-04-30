@@ -152,6 +152,7 @@ final class Preview extends AbstractController
                     || $importMode === 'update' && !array_key_exists($contentRemoteId, $skippedContent)
                 ) {
                     $attributes = $content['attributes'];
+                    $isMultiLanguage = !array_key_exists('lang', $content);
                     foreach ($attributes as $field => $value) {
                         $fieldTypeIdentifier = $contentType->getFieldDefinition($field)->fieldTypeIdentifier;
 
@@ -165,14 +166,29 @@ final class Preview extends AbstractController
                             continue;
                         }
 
-                        $skipsField = $fieldHandler->skipsField($value);
-                        if (is_string($skipsField)) {
-                            $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skipsField;
-                            $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
-                        } elseif (is_array($skipsField) && count($skipsField) > 0) {
-                            foreach ($skipsField as $skippedField) {
-                                $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skippedField;
+                        if ($isMultiLanguage && is_array($value)) {
+                            foreach ($value as $langCode => $langValue) {
+                                $skipsField = $fieldHandler->skipsField($langValue);
+                                if (is_string($skipsField)) {
+                                    $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skipsField . ' (' . $langCode . ')';
+                                    $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
+                                } elseif (is_array($skipsField) && count($skipsField) > 0) {
+                                    foreach ($skipsField as $skippedField) {
+                                        $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skippedField . ' (' . $langCode . ')';
+                                        $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
+                                    }
+                                }
+                            }
+                        } else {
+                            $skipsField = $fieldHandler->skipsField($value);
+                            if (is_string($skipsField)) {
+                                $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skipsField;
                                 $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
+                            } elseif (is_array($skipsField) && count($skipsField) > 0) {
+                                foreach ($skipsField as $skippedField) {
+                                    $skippedContentFields[$contentRemoteId]['fields'][$fieldTypeIdentifier . '-' . $field][] = $skippedField;
+                                    $skippedContentFields[$contentRemoteId]['name'] = $content['exported_content_name'];
+                                }
                             }
                         }
                     }

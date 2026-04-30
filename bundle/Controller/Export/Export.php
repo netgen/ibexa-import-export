@@ -26,6 +26,7 @@ use function is_dir;
 use function mkdir;
 use function sprintf;
 use function str_replace;
+use function usort;
 
 final class Export extends AbstractController
 {
@@ -165,14 +166,35 @@ final class Export extends AbstractController
                         $content['exported_content_name'] = $this->repository->sudo(
                             fn () => $this->contentService->loadContentByRemoteId($content['remote_id'])->getName(),
                         );
+                        // parent depth + 1 = depth of this content's location
+                        $content['__sort_depth'] = $location->depth + 1;
                     } elseif ($migrationType === 'update') {
                         $remoteId = $content['new_remote_id'] ?? $content['match']['content_remote_id'] ?? '';
 
-                        $content['exported_content_name'] = $this->repository->sudo(
-                            fn () => $this->contentService->loadContentByRemoteId($remoteId)->getName(),
+                        $loadedContent = $this->repository->sudo(
+                            fn () => $this->contentService->loadContentByRemoteId($remoteId),
                         );
+                        $content['exported_content_name'] = $loadedContent->getName();
+
+                        $mainLocation = $this->repository->sudo(
+                            fn () => $this->locationService->loadLocation($loadedContent->contentInfo->mainLocationId),
+                        );
+                        $content['__sort_depth'] = $mainLocation->depth;
                     }
                 }
+                unset($content);
+
+                // Sort entries so parents (shallower depth) come before children. Required for create-mode
+                // imports where a child cannot be created before its parent location exists.
+                usort(
+                    $yamlParsed,
+                    static fn (array $a, array $b): int => ($a['__sort_depth'] ?? 0) <=> ($b['__sort_depth'] ?? 0),
+                );
+
+                foreach ($yamlParsed as &$content) {
+                    unset($content['__sort_depth']);
+                }
+                unset($content);
 
                 $yaml = Yaml::dump($yamlParsed);
                 file_put_contents($filePath, $yaml);
