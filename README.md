@@ -20,6 +20,20 @@ Install the package with:
 composer require netgen/ibexa-import-export
 ```
 
+### Register the routes
+
+The bundle ships with its own routing file but does not auto-import it. Add it
+to your application's routing configuration (typically `config/routes.yaml` or
+an Ibexa Admin UI routes file):
+
+```yaml
+ibexa.import_export:
+    resource: '@NetgenIbexaImportExportBundle/Resources/config/routing.yaml'
+```
+
+After clearing the cache the module routes become available and the
+**Import/Export** menu item appears under **Admin**.
+
 Licensed under [GPLv2](LICENSE)
 
 Import/Export module
