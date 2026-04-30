@@ -94,39 +94,6 @@ final class Preview extends AbstractController
             }
             $importMode = $yamlParsed[0]['mode'];
 
-            if ($importMode === 'create' && $importStructure === 'Subtree') {
-                $rootRemoteId = $yamlParsed[0]['remote_id'] ?? null;
-                $rootName = $yamlParsed[0]['exported_content_name'] ?? null;
-
-                if (is_string($rootRemoteId) && $rootRemoteId !== '') {
-                    try {
-                        $this->repository->sudo(
-                            fn () => $this->contentService->loadContentByRemoteId($rootRemoteId),
-                        );
-
-                        $errors[] = sprintf(
-                            'Subtree import cannot be executed because the root content %s(remote id: %s) already exists.',
-                            $rootName,
-                            $rootRemoteId,
-                        );
-                    } catch (NotFoundException) {
-                        // Do nothing
-                    }
-                }
-            }
-
-            if (count($errors) > 0) {
-                $response = $this->render('@NetgenIbexaImportExport/preview.html.twig', [
-                    'import_structure' => $importStructure,
-                    'import_mode' => $importMode,
-                    'errors' => $errors,
-                    'skipped_content' => $skippedContent,
-                    'skipped_content_fields' => $skippedContentFields,
-                ]);
-
-                return new Response($response->getContent(), Response::HTTP_BAD_REQUEST);
-            }
-
             foreach ($yamlParsed as $content) {
                 $contentRemoteId = $importMode === 'update' ? $content['match']['content_remote_id'] : $content['remote_id'];
 

@@ -133,6 +133,10 @@ final class Import extends AbstractController
                         ],
                     );
                 }
+                // Rewrite the root entry's parent_location BEFORE the skip-existing loop runs.
+                // After array_values reindex below, $yamlParsed[0] may no longer be the original
+                // root (if it gets unset because it already exists), so this rewrite must target
+                // the export's root entry while it still sits at index 0.
                 $yamlParsed[0]['parent_location'] = $parentLocation->remoteId;
                 foreach ($yamlParsed as $key => $content) {
                     $contentRemoteId = $content['remote_id'] ?? null;
