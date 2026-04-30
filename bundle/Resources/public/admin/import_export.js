@@ -25,12 +25,16 @@
             return previewSection ? previewSection.dataset.importMode : '';
         }
 
+        // The content browser's single widget renders two hidden inputs:
+        //   .js-item-type — carries the item-type config (e.g. "ibexa_location"), NOT the picked value
+        //   .js-value     — carries the actually picked location value (or empty when nothing is selected)
+        // Always target .js-value to read the real selection.
         function getParentLocationValue() {
             if (!parentLocationField) {
                 return '';
             }
-            var hiddenInput = parentLocationField.querySelector('input');
-            return hiddenInput ? (hiddenInput.value || '') : '';
+            var valueInput = parentLocationField.querySelector('.js-value');
+            return valueInput ? (valueInput.value || '') : '';
         }
 
         function applyImportModeToForm() {
@@ -39,18 +43,18 @@
             }
 
             var importMode = getImportMode();
-            var hiddenInput = parentLocationField.querySelector('input');
+            var valueInput = parentLocationField.querySelector('.js-value');
 
             // parent_location is irrelevant for update-mode imports; grey it out.
             if (importMode === 'update') {
                 parentLocationField.classList.add('ibexa-import-export__field-parent-location--disabled');
-                if (hiddenInput) {
-                    hiddenInput.disabled = true;
+                if (valueInput) {
+                    valueInput.disabled = true;
                 }
             } else {
                 parentLocationField.classList.remove('ibexa-import-export__field-parent-location--disabled');
-                if (hiddenInput) {
-                    hiddenInput.disabled = false;
+                if (valueInput) {
+                    valueInput.disabled = false;
                 }
             }
         }

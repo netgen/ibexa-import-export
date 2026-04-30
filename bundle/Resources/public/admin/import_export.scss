@@ -183,9 +183,17 @@
   filter: none;
 }
 
-.ibexa-import-export-import .ibexa-import-export__form input[type="submit"]:hover {
+.ibexa-import-export-import .ibexa-import-export__form input[type="submit"]:hover:not([disabled]) {
   background-color: #c82333 !important; /* Slightly darker red on hover */
   border-color: #bd2130 !important;
+}
+
+/* Disabled import button — clearly grey instead of muted-red so the user notices */
+.ibexa-import-export-import .ibexa-import-export__form input[type="submit"][disabled] {
+  background-color: #adb5bd !important;
+  border-color: #adb5bd !important;
+  cursor: not-allowed;
+  opacity: 1 !important; /* override the inline 0.5 from JS — colour change conveys disabled clearly */
 }
 
 
